@@ -75,7 +75,8 @@ public:
   void swap(const Elem & elem, unsigned int side = 0);
 
   /// Reinit material properties for given element (and possible side)
-  void reinit(const std::vector<std::shared_ptr<Material>> & mats);
+  void reinit(const std::vector<std::shared_ptr<Material>> & mats,
+              bool prevent_update_interface_materials = false);
 
   /// Calls the reset method of Materials to ensure that they are in a proper state.
   void reset(const std::vector<std::shared_ptr<Material>> & mats);

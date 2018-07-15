@@ -41,6 +41,8 @@ validParams<Material>()
                         "The user must call computeProperties() after retrieving the Material "
                         "via MaterialPropertyInterface::getMaterial(). "
                         "Non-computed Materials are not sorted for dependencies.");
+  params.addParam<bool>(
+      "is_interface_material", false, "the flag defining a material as interface material");
   MooseEnum const_option("NONE=0 ELEMENT=1 SUBDOMAIN=2", "none");
   params.addParam<MooseEnum>(
       "constant_on",
@@ -100,6 +102,7 @@ Material::Material(const InputParameters & parameters)
     _assembly(_subproblem.assembly(_tid)),
     _bnd(_material_data_type != Moose::BLOCK_MATERIAL_DATA),
     _neighbor(_material_data_type == Moose::NEIGHBOR_MATERIAL_DATA),
+    _is_interface_material(getParam<bool>("is_interface_material")),
     _qp(std::numeric_limits<unsigned int>::max()),
     _qrule(_bnd ? _assembly.qRuleFace() : _assembly.qRule()),
     _JxW(_bnd ? _assembly.JxWFace() : _assembly.JxW()),

@@ -64,10 +64,16 @@ MaterialData::swap(const Elem & elem, unsigned int side /* = 0*/)
 }
 
 void
-MaterialData::reinit(const std::vector<std::shared_ptr<Material>> & mats)
+MaterialData::reinit(const std::vector<std::shared_ptr<Material>> & mats,
+                     bool prevent_update_interface_materials)
 {
   for (const auto & mat : mats)
-    mat->computeProperties();
+  {
+    if (prevent_update_interface_materials && mat->isInterfaceMaterial())
+      return;
+    else
+      mat->computeProperties();
+  }
 }
 
 void
