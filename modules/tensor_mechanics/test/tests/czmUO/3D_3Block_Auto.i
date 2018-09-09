@@ -6,7 +6,7 @@
 [MeshModifiers]
   [./breakmesh]
     type = BreakMeshByBlock
-    split_interface = false
+    # split_interface = false
   [../]
 
   [./bottom_block_1]
@@ -172,7 +172,7 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_2
-    function = 0.02*t
+    function = 0.01*t
   [../]
   [./top3_x]
     type = DirichletBC
@@ -190,44 +190,44 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_3
-    function = 0.01*t
+    function = 0.02*t
   [../]
 []
-# [InterfaceKernels]
-#   [./interface_x]
-#     type = DisplacementJumpBasedCohesiveInterfaceKernel
-#     variable = disp_x
-#     neighbor_var = disp_x
-#     disp_1 = disp_y
-#     disp_1_neighbor = disp_y
-#     disp_2 = disp_z
-#     disp_2_neighbor = disp_z
-#     disp_index = 0
-#     boundary = 100
-#   [../]
-#   [./interface_y]
-#     type = DisplacementJumpBasedCohesiveInterfaceKernel
-#     variable = disp_y
-#     neighbor_var = disp_y
-#     disp_1 = disp_x
-#     disp_1_neighbor = disp_x
-#     disp_2 = disp_z
-#     disp_2_neighbor = disp_z
-#     disp_index = 1
-#     boundary = 100
-#   [../]
-#   [./interface_z]
-#     type = DisplacementJumpBasedCohesiveInterfaceKernel
-#     variable = disp_z
-#     neighbor_var = disp_z
-#     disp_1 = disp_x
-#     disp_1_neighbor = disp_x
-#     disp_2 = disp_y
-#     disp_2_neighbor = disp_y
-#     disp_index = 2
-#     boundary = 100
-#   [../]
-# []
+[InterfaceKernels]
+  [./interface_x]
+    type = czmInterfaceKernel
+    variable = disp_x
+    neighbor_var = disp_x
+    disp_1 = disp_y
+    disp_1_neighbor = disp_y
+    disp_2 = disp_z
+    disp_2_neighbor = disp_z
+    disp_index = 0
+    boundary = 'interface'
+  [../]
+  [./interface_y]
+    type = czmInterfaceKernel
+    variable = disp_y
+    neighbor_var = disp_y
+    disp_1 = disp_x
+    disp_1_neighbor = disp_x
+    disp_2 = disp_z
+    disp_2_neighbor = disp_z
+    disp_index = 1
+    boundary = 'interface'
+  [../]
+  [./interface_z]
+    type = czmInterfaceKernel
+    variable = disp_z
+    neighbor_var = disp_z
+    disp_1 = disp_x
+    disp_1_neighbor = disp_x
+    disp_2 = disp_y
+    disp_2_neighbor = disp_y
+    disp_index = 2
+    boundary = 'interface'
+  [../]
+[]
 [UserObjects]
   [./displacement_jump_uo]
     type = DispJumpUO_QP
@@ -283,8 +283,9 @@
   l_tol = 1e-10
   l_max_its = 50
   start_time = 0.0
-  dt = 10.0
-  end_time = 300
+  dt = 50.0
+  end_time = 1000
+  # line_search = none
 []
 [Outputs]
   [./out]

@@ -47,7 +47,9 @@ czmUOMat::czmUOMat(const InputParameters & parameters)
     _traction_spatial_derivatives(
         declareProperty<std::vector<std::vector<Real>>>("traction_spatial_derivatives")),
     _traction_spatial_derivatives_local(
-        declareProperty<std::vector<std::vector<Real>>>("traction_spatial_derivatives_local"))
+        declareProperty<std::vector<std::vector<Real>>>("traction_spatial_derivatives_local")),
+    _residual(declareProperty<std::vector<Real>>("czmResidual")),
+    _jacobian(declareProperty<std::vector<std::vector<Real>>>("czmJacobian"))
 
 {
 }
@@ -63,6 +65,9 @@ czmUOMat::computeQpProperties()
   _traction_spatial_derivatives[_qp].resize(3, std::vector<Real>(3, 0));
   _traction_spatial_derivatives_local[_qp].resize(3, std::vector<Real>(3, 0));
 
+  _residual[_qp].resize(3, 0);
+  _jacobian[_qp].resize(3, std::vector<Real>(3, 0));
+
   _displacement_jump[_qp] =
       _displacement_jump_UO.getDisplacementJump(_current_elem->id(), _current_side, _qp);
 
@@ -74,6 +79,43 @@ czmUOMat::computeQpProperties()
   _traction[_qp] = rotateVector(_traction_local[_qp], RotationGlobal2Local, /*inverse =*/true);
   _traction_spatial_derivatives[_qp] = rotateTensor2(
       _traction_spatial_derivatives_local[_qp], RotationGlobal2Local, /*inverse =*/true);
+
+  _residual[_qp] = _traction[_qp];
+  _jacobian[_qp] = _traction_spatial_derivatives[_qp];
+
+  // if (_current_elem->id() == 1234)
+  // {
+  //   std::cout << "ELEM: " << _current_elem->id() << " SIDE:" << _current_side << " QP: " << _qp
+  //             << std::endl;
+  //   std::cout << "    _normals: " << _normals[_qp](0) << " " << _normals[_qp](1) << " "
+  //             << _normals[_qp](2) << " " << std::endl;
+  //   std::cout << "    RotationGlobal2Local: " << RotationGlobal2Local(0, 0) << " "
+  //             << RotationGlobal2Local(0, 1) << " " << RotationGlobal2Local(0, 2) << " "
+  //             << std::endl;
+  //   std::cout << "                          " << RotationGlobal2Local(1, 0) << " "
+  //             << RotationGlobal2Local(1, 1) << " " << RotationGlobal2Local(1, 2) << " "
+  //             << std::endl;
+  //   std::cout << "                          " << RotationGlobal2Local(2, 0) << " "
+  //             << RotationGlobal2Local(2, 1) << " " << RotationGlobal2Local(2, 2) << " "
+  //             << std::endl;
+  //   std::cout << "    _displacement_jump: " << _displacement_jump[_qp][0] << " "
+  //             << _displacement_jump[_qp][1] << " " << _displacement_jump[_qp][2] << " "
+  //             << std::endl;
+  //   std::cout << "    _displacement_jump_local: " << _displacement_jump_local[_qp][0] << " "
+  //             << _displacement_jump_local[_qp][1] << " " << _displacement_jump_local[_qp][2] << "
+  //             "
+  //             << std::endl;
+  //   std::cout << "    _traction_local: " << _traction_local[_qp][0] << " "
+  //             << _traction_local[_qp][1] << " " << _traction_local[_qp][2] << " " << std::endl;
+  //   std::cout << "    _traction: " << _traction[_qp][0] << " " << _traction[_qp][1] << " "
+  //             << _traction[_qp][2] << " " << std::endl;
+  //   // std::cout << "    _traction_spatial_derivatives_local: " <<
+  //   // _traction_spatial_derivatives_local << std::endl; std::cout << "
+  //   // _traction_spatial_derivatives: " <<  _traction_spatial_derivatives << std::endl;
+  //   std::cout << "    _residual: " << _residual[_qp][0] << " " << _residual[_qp][1] << " "
+  //             << _residual[_qp][2] << " " << std::endl;
+  //   // std::cout << "    _jacobian: " << _jacobian << std::endl;
+  // }
 }
 
 std::vector<Real>
@@ -89,7 +131,7 @@ czmUOMat::rotateVector(const std::vector<Real> v,
 
   for (unsigned int i = 0; i < 3; i++)
     for (unsigned int j = 0; j < 3; j++)
-      vrot[i] += v[i] * R_loc(i, j);
+      vrot[i] += v[j] * R_loc(i, j);
   return vrot;
 }
 
@@ -104,10 +146,10 @@ czmUOMat::rotateTensor2(const std::vector<std::vector<Real>> T,
 
   std::vector<std::vector<Real>> trot(3, std::vector<Real>(3, 0));
   for (unsigned int i = 0; i < 3; i++)
-    for (unsigned int k = 0; k < 3; k++)
-      for (unsigned int j = 0; j < 3; j++)
+    for (unsigned int j = 0; j < 3; j++)
+      for (unsigned int k = 0; k < 3; k++)
         for (unsigned int l = 0; l < 3; l++)
-          trot[i][k] += T[k][l] * R_loc(i, j) * R_loc(j, l);
+          trot[i][j] += R_loc(i, k) * R_loc(j, l) * T[k][l];
   return trot;
 }
 
@@ -201,7 +243,7 @@ czmUOMat::computeTractionSpatialDerivativeLocal()
       if (j == 0) // alpha = 1
         dX_duj = 1. / _deltaU0[j];
       else // alpha = 2
-        dX_duj = 2. * _displacement_jump_local[_qp][i] / (_deltaU0[j] * _deltaU0[j]);
+        dX_duj = 2. * _displacement_jump_local[_qp][j] / (_deltaU0[j] * _deltaU0[j]);
       TractionDerivativeLocal[i][j] =
           A_i * expX * (dBi_dui - B_i * dX_duj); // the minus sign is due to exp(-X)
     }

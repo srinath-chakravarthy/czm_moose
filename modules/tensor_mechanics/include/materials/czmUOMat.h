@@ -42,6 +42,8 @@ protected:
   MaterialProperty<std::vector<Real>> & _traction_local;
   MaterialProperty<std::vector<std::vector<Real>>> & _traction_spatial_derivatives;
   MaterialProperty<std::vector<std::vector<Real>>> & _traction_spatial_derivatives_local;
+  MaterialProperty<std::vector<Real>> & _residual;
+  MaterialProperty<std::vector<std::vector<Real>>> & _jacobian;
 
   std::vector<Real> rotateVector(const std::vector<Real> /*v*/,
                                  const RealTensorValue /*R*/,
