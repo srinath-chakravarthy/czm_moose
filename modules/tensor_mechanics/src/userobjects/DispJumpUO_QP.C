@@ -34,10 +34,10 @@ DispJumpUO_QP::DispJumpUO_QP(const InputParameters & parameters)
   : InterfaceUserObject(parameters),
     _ux(coupledValue("disp_x")),
     _ux_neighbor(coupledNeighborValue("disp_x")),
-    _uy(coupledValue("disp_y")),
-    _uy_neighbor(coupledNeighborValue("disp_y")),
-    _uz(coupledValue("disp_z")),
-    _uz_neighbor(coupledNeighborValue("disp_z"))
+    _uy(_mesh.dimension() >= 2 ? coupledValue("disp_y") : _zero),
+    _uy_neighbor(_mesh.dimension() >= 2 ? coupledNeighborValue("disp_y") : _zero),
+    _uz(_mesh.dimension() >= 3 ? coupledValue("disp_z") : _zero),
+    _uz_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z") : _zero)
 {
 }
 
