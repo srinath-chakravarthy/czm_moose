@@ -7,39 +7,46 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef CZMUOMAT_H
-#define CZMUOMAT_H
+#ifndef CZMUOMATSTATEFUL_H
+#define CZMUOMATSTATEFUL_H
 
 #include "Material.h"
 #include "DispJumpUO_QP.h"
 
-class czmUOMat;
+class czmUOMatStateful;
 
 template <>
-InputParameters validParams<czmUOMat>();
+InputParameters validParams<czmUOMatStateful>();
 
 /**
  *
  */
-class czmUOMat : public Material
+class czmUOMatStateful : public Material
 {
 public:
-  czmUOMat(const InputParameters & parameters);
+  czmUOMatStateful(const InputParameters & parameters);
 
 protected:
   virtual void computeQpProperties() override;
+  virtual void initQpStatefulProperties() override;
 
   // cohesive law paramters
-  const std::vector<Real> _deltaU0;
-  const std::vector<Real> _maxAllowableTraction;
+  const Real _deltaU0;
+  const Real _maxAllowableTraction;
+  const Real _beta;
 
   /// User objects computing the displacement jump
   const DispJumpUO_QP & _displacement_jump_UO;
 
   MaterialProperty<std::vector<Real>> & _displacement_jump;
   MaterialProperty<std::vector<Real>> & _displacement_jump_local;
+  MaterialProperty<Real> & _max_effective_jump;
+  const MaterialProperty<Real> & _max_effective_jump_old;
+  MaterialProperty<Real> & _effective_jump;
+  const MaterialProperty<Real> & _effective_jump_old;
   MaterialProperty<std::vector<Real>> & _traction;
   MaterialProperty<std::vector<Real>> & _traction_local;
+  MaterialProperty<Real> & _effective_traction;
   MaterialProperty<std::vector<std::vector<Real>>> & _traction_spatial_derivatives;
   MaterialProperty<std::vector<std::vector<Real>>> & _traction_spatial_derivatives_local;
   MaterialProperty<std::vector<Real>> & _residual;
@@ -55,6 +62,13 @@ protected:
 
   std::vector<Real> computeTractionLocal();
   std::vector<std::vector<Real>> computeTractionSpatialDerivativeLocal();
+  Real computeEffectiveJump();
+  Real computeEffectiveTraction();
+  Real computeEffectiveTractionNonLinear(Real /*effective_jump*/);
+  Real computeEffectiveTractionLinear();
+  bool checkLoadUnload();
+  std::vector<std::vector<Real>> computeTractionSpatialDerivativeLocalNonLinear();
+  std::vector<std::vector<Real>> computeTractionSpatialDerivativeLocalLinear();
 };
 
-#endif // CZMUOMAT_H
+#endif // CZMUOMATSTATEFUL_H
