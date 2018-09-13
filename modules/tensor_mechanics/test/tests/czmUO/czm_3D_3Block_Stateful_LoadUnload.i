@@ -142,7 +142,7 @@
   [./loadUnloadFunction]
   type = PiecewiseLinear
   x = '0 50 100 150 200 250 300 400 500 600'
-  y = '0 1  0   1.5 0   2   0   3   0   5'
+  y = '0 1.2  0   1.5 0   2   0   3   0   5'
   [../]
 []
 
@@ -337,6 +337,12 @@
   [./sxy_3G]
     type = ElementAverageValue
     variable = sxy
+    execute_on = 'initial timestep_end'
+    block = 3
+  [../]
+  [./disp_Z]
+    type = ElementAverageValue
+    variable = disp_z
     execute_on = 'initial timestep_end'
     block = 3
   [../]

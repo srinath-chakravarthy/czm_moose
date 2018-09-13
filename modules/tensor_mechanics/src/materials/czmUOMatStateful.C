@@ -107,7 +107,6 @@ czmUOMatStateful::checkLoadUnload()
   bool is_unloading = false;
   if (_effective_jump[_qp] < _effective_jump_old[_qp]) /*unloading*/
     is_unloading = true;
-
   return is_unloading;
 }
 
@@ -116,19 +115,44 @@ czmUOMatStateful::computeEffectiveTraction()
 {
   if (!checkLoadUnload()) /* loading */
   {
+
     if (_max_effective_jump_old[_qp] < _deltaU0) /* not damaged*/
+    {
+      if (_current_elem->id() == 1 && _qp == 0)
+        std::cout << "LOAD,  NOT-DAMAGED, NONLINEAR" << std::endl;
       return computeEffectiveTractionNonLinear(_effective_jump[_qp]);
+    }
+
     else /*damaged*/
     {
-      if (_effective_jump[_qp] <= _max_effective_jump_old[_qp]) /* linear region*/
+      if (_effective_jump[_qp] < _max_effective_jump_old[_qp]) /* linear region*/
+      {
+        if (_current_elem->id() == 1 && _qp == 0)
+          std::cout << "LOAD, DAMAGED, LINEAR" << std::endl;
         return computeEffectiveTractionLinear();
+      }
       else
+      {
+        if (_current_elem->id() == 1 && _qp == 0)
+          std::cout << "LOAD, DAMAGED, NONLINEAR" << std::endl;
         return computeEffectiveTractionNonLinear(_effective_jump[_qp]); /* NON linear region*/
+      }
     }
   }
   else /* unload */
   {
-    return computeEffectiveTractionLinear();
+    if (_max_effective_jump_old[_qp] < _deltaU0) /* not damaged*/
+    {
+      if (_current_elem->id() == 1 && _qp == 0)
+        std::cout << "UNLOAD, NOT-DAMAGED, NONLINEAR" << std::endl;
+      return computeEffectiveTractionNonLinear(_effective_jump[_qp]);
+    }
+    else /*damaged*/
+    {
+      if (_current_elem->id() == 1 && _qp == 0)
+        std::cout << "UNLOAD, DAMAGED, LINEAR" << std::endl;
+      return computeEffectiveTractionLinear();
+    }
   }
 }
 
@@ -162,17 +186,16 @@ czmUOMatStateful::computeQpProperties()
   _residual[_qp] = _traction[_qp];
   _jacobian[_qp] = _traction_spatial_derivatives[_qp];
   if (_effective_jump[_qp] > _max_effective_jump_old[_qp])
-  {
-    std::cout << "update _max_effective_jump" << std::endl;
     _max_effective_jump[_qp] = _effective_jump[_qp];
-  }
+  else
+    _max_effective_jump[_qp] = _max_effective_jump_old[_qp];
 
-  if (_current_elem->id() == 1234 && _qp == 0)
+  if (_current_elem->id() == 1 && _qp == 0)
   {
     std::cout << "ELEM: " << _current_elem->id() << " SIDE:" << _current_side << " QP: " << _qp
               << std::endl;
-    std::cout << "    _normals: " << _normals[_qp](0) << " " << _normals[_qp](1) << " "
-              << _normals[_qp](2) << " " << std::endl;
+    // std::cout << "    _normals: " << _normals[_qp](0) << " " << _normals[_qp](1) << " "
+    //           << _normals[_qp](2) << " " << std::endl;
     std::cout << "UNLOAD: " << checkLoadUnload() << std::endl;
 
     std::cout << "_max_effective_jump_old: " << _max_effective_jump_old[_qp] << std::endl;
@@ -306,22 +329,24 @@ czmUOMatStateful::computeTractionSpatialDerivativeLocal()
 {
   std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
 
-  // non linear case
   if (!checkLoadUnload()) /* loading */
   {
-    if (_max_effective_jump_old[_qp] < _deltaU0) /* not damaged*/
+    if (_max_effective_jump_old[_qp] < _deltaU0) /* not damaged -> NonLinear*/
       return computeTractionSpatialDerivativeLocalNonLinear();
     else /*damaged*/
     {
-      if (_effective_jump[_qp] <= _max_effective_jump_old[_qp]) /* linear region*/
-        return computeTractionSpatialDerivativeLocalLinear();
-      else
-        return computeTractionSpatialDerivativeLocalNonLinear(); /* NON linear region*/
+      // if (_effective_jump[_qp] < _max_effective_jump_old[_qp]) /* Linear */
+      return computeTractionSpatialDerivativeLocalLinear();
+      // else
+      //   return computeTractionSpatialDerivativeLocalNonLinear(); /* NON linear region*/
     }
   }
   else /* unload */
   {
-    return computeTractionSpatialDerivativeLocalLinear();
+    if (_max_effective_jump_old[_qp] < _deltaU0) /* not damaged*/
+      return computeTractionSpatialDerivativeLocalNonLinear();
+    else /*damaged*/
+      return computeTractionSpatialDerivativeLocalLinear();
   }
 }
 
