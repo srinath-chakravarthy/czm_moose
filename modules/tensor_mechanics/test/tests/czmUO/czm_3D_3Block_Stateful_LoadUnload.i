@@ -140,9 +140,9 @@
 
 [Functions]
   [./loadUnloadFunction]
-  type = PiecewiseLinear
-  x = '0 50 100 150 200 250 300 400 500 600'
-  y = '0 1.2  0   1.5 0   2   0   3   0   5'
+    type = PiecewiseLinear
+    x = '0 4    10 16   20  30 40   65  70 120'
+    y = '0 0.8  0  1.2  0   2   0   5   0   10'
   [../]
 []
 
@@ -293,9 +293,9 @@
   l_tol = 1e-10
   l_max_its = 50
   start_time = 0.0
-  dt = 10
-  end_time = 600
-  dtmin = 10
+  dt = 1
+  end_time = 120
+  dtmin = 1
   line_search = none
 []
 [Outputs]
