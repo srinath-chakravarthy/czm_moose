@@ -8,14 +8,14 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "CZMTractionSeparationUOBase.h"
-#include "Material.h"
+// #include "Material.h"
 #include "MooseError.h"
 
 template <>
 InputParameters
 validParams<CZMTractionSeparationUOBase>()
 {
-  InputParameters params = validParams<SideUserObject>();
+  InputParameters params = validParams<DiscreteElementUserObject>();
   params.addClassDescription(
       "User Object implementing basic functions for traction separations law");
   params.set<ExecFlagEnum>("execute_on") = EXEC_CUSTOM;
@@ -29,7 +29,7 @@ validParams<CZMTractionSeparationUOBase>()
 }
 
 CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters & parameters)
-  : SideUserObject(parameters),
+  : DiscreteElementUserObject(parameters),
     _n_history_variables(getParam<unsigned int>("n_history_variables")),
     _history_variables_initial_values(
         getParam<std::vector<Real>>("history_variables_initial_values"))
@@ -109,25 +109,27 @@ CZMTractionSeparationUOBase::computeTractionSpatialDerivativeLocal(
 }
 
 // ovverride standard UO functions
-void
-CZMTractionSeparationUOBase::initialize()
-{
-}
-
-void
-CZMTractionSeparationUOBase::execute()
-{
-  mooseError("execute CZMTractionSeparationUOBase must be called explicitly from Materials");
-}
-
-void
-CZMTractionSeparationUOBase::finalize()
-{
-  mooseError("finalize CZMTractionSeparationUOBase must be called explicitly from Materials");
-}
-
-void
-CZMTractionSeparationUOBase::threadJoin(const UserObject &)
-{
-  mooseError("threadJoin CZMTractionSeparationUOBase must be called explicitly from Materials");
-}
+// void
+// CZMTractionSeparationUOBase::initialize()
+// {
+// }
+//
+// void
+// CZMTractionSeparationUOBase::execute()
+// {
+//   mooseError("execute CZMTractionSeparationUOBase must be called explicitly from Materials");
+// }
+//
+// void
+// CZMTractionSeparationUOBase::finalize()
+// {
+//   mooseError("finalize CZMTractionSeparationUOBase must be called explicitly from
+//   Materials");
+// }
+//
+// void
+// CZMTractionSeparationUOBase::threadJoin(const UserObject &)
+// {
+//   mooseError("threadJoin CZMTractionSeparationUOBase must be called explicitly from
+//   Materials");
+// }

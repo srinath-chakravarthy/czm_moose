@@ -53,8 +53,8 @@ protected:
   const std::string _jacobian;
 
   // values of the residual's and jacobian's cofficients
-  const MaterialProperty<std::vector<Real>> * _ResidualMP;
-  const MaterialProperty<std::vector<std::vector<Real>>> * _JacobianMP;
+  const MaterialProperty<std::vector<Real>> & _ResidualMP;
+  const MaterialProperty<std::vector<std::vector<Real>>> & _JacobianMP;
 };
 
 #endif // DISPLACMENTJUMPBASEDCOHESIVEINTERFACEKERNEL_H

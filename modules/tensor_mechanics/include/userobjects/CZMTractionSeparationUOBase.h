@@ -10,7 +10,7 @@
 #ifndef CZMTRACTIONSEPARATIONUOBASE_H
 #define CZMTRACTIONSEPARATIONUOBASE_H
 
-#include "SideUserObject.h"
+#include "DiscreteElementUserObject.h"
 #include "RankTwoTensor.h"
 
 class CZMTractionSeparationUOBase;
@@ -21,16 +21,16 @@ InputParameters validParams<CZMTractionSeparationUOBase>();
 /**
 Traction sepration law basic user object
  */
-class CZMTractionSeparationUOBase : public SideUserObject
+class CZMTractionSeparationUOBase : public DiscreteElementUserObject
 {
 public:
   CZMTractionSeparationUOBase(const InputParameters & parameters);
 
   /// @{ Block all methods that are not used in explicitly called UOs
-  virtual void initialize() override;
-  virtual void execute() override final;
-  virtual void finalize() override final;
-  virtual void threadJoin(const UserObject &) override final;
+  // virtual void initialize() override;
+  // virtual void execute() override final;
+  // virtual void finalize() override final;
+  // virtual void threadJoin(const UserObject &) override final;
 
   /// return the number of stateful material properties
   unsigned int getNumberHistoryVariables() const;

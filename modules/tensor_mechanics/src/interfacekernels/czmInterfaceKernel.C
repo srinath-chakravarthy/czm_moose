@@ -74,7 +74,9 @@ czmInterfaceKernel::czmInterfaceKernel(const InputParameters & parameters)
     // residual and jacobian coefficients are material properties and represents
     // the residual and jacobain of the traction sepration law wrt the displacement jump.
     _residual(getParam<std::string>("residual")),
-    _jacobian(getParam<std::string>("jacobian"))
+    _jacobian(getParam<std::string>("jacobian")),
+    _ResidualMP(getMaterialProperty<std::vector<Real>>(_residual)),
+    _JacobianMP(getMaterialProperty<std::vector<std::vector<Real>>>(_jacobian))
 
 {
   if (!parameters.isParamValid("boundary"))
@@ -82,16 +84,13 @@ czmInterfaceKernel::czmInterfaceKernel(const InputParameters & parameters)
     mooseError("In order to use  czmInterfaceKernel ,"
                " you must specify a boundary where it will live.");
   }
-
-  _ResidualMP = &getMaterialProperty<std::vector<Real>>(_residual);
-  _JacobianMP = &getMaterialProperty<std::vector<std::vector<Real>>>(_jacobian);
 }
 
 Real
 czmInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
 {
 
-  Real r = (*_ResidualMP)[_qp][_disp_index];
+  Real r = _ResidualMP[_qp][_disp_index];
 
   switch (type)
   {
@@ -114,7 +113,7 @@ czmInterfaceKernel::computeQpJacobian(Moose::DGJacobianType type)
 {
   // retrieve the diagonal jacobain coefficient dependning on the disaplcement
   // component (_disp_index) this kernel is working on
-  Real jac = (*_JacobianMP)[_qp][_disp_index][_disp_index];
+  Real jac = _JacobianMP[_qp][_disp_index][_disp_index];
 
   switch (type)
   {
@@ -188,7 +187,7 @@ czmInterfaceKernel::computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigne
     mooseError("cannot determine the proper OffDiagIndex");
   }
 
-  Real jac = (*_JacobianMP)[_qp][_disp_index][OffDiagIndex];
+  Real jac = _JacobianMP[_qp][_disp_index][OffDiagIndex];
 
   switch (type)
   {
