@@ -10,7 +10,7 @@
 #ifndef COHESIVELAW_3DC_H
 #define COHESIVELAW_3DC_H
 
-#include "TractionSeparationUOBase.h"
+#include "CZMTractionSeparationUOBase.h"
 
 class CohesiveLaw_3DC;
 
@@ -20,19 +20,17 @@ InputParameters validParams<CohesiveLaw_3DC>();
 /**
 Traction sepration law basic user object
  */
-class CohesiveLaw_3DC : public TractionSeparationUOBase
+class CohesiveLaw_3DC : public CZMTractionSeparationUOBase
 {
 public:
   CohesiveLaw_3DC(const InputParameters & parameters);
 
-  virtual void computeTractionLocal(unsigned int qp,
-                                    RealVectorValue & TractionLocal) const override;
-  virtual void
-  computeTractionSpatialDerivativeLocal(unsigned int qp,
-                                        RankTwoTensor & TractionDerivativeLocal) const override;
+  std::vector<Real> computeTractionLocal(unsigned int qp) const override;
+  std::vector<std::vector<Real>>
+  computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
 
 protected:
-  // cohesive law paramters
+  // cohesive law parameters
   const std::vector<Real> _deltaU0;
   const std::vector<Real> _maxAllowableTraction;
 };

@@ -48,8 +48,8 @@ czmUOMat::czmUOMat(const InputParameters & parameters)
         declareProperty<std::vector<std::vector<Real>>>("traction_spatial_derivatives")),
     _traction_spatial_derivatives_local(
         declareProperty<std::vector<std::vector<Real>>>("traction_spatial_derivatives_local")),
-    _residual(declareProperty<std::vector<Real>>("czmResidual")),
-    _jacobian(declareProperty<std::vector<std::vector<Real>>>("czmJacobian"))
+    _residual(declareProperty<std::vector<Real>>("czm_residual")),
+    _jacobian(declareProperty<std::vector<std::vector<Real>>>("czm_jacobian"))
 
 {
 }

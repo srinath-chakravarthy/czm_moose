@@ -48,11 +48,11 @@ validParams<czmInterfaceKernel>()
                        "If disp_index == 2, disp_2_neighbor = disp_y_neighbor");
   params.addParam<std::string>(
       "residual",
-      "czmResidual",
+      "czm_residual",
       "The name of the material property representing the residual coefficients");
   params.addParam<std::string>(
       "jacobian",
-      "czmJacobian",
+      "czm_jacobian",
       "The name of the  material property representing the jacobian coefficients");
   params.addClassDescription("Cohesive Zone Interface Kernel for non-stateful"
                              "cohesive laws depending only on the displacement Jump");

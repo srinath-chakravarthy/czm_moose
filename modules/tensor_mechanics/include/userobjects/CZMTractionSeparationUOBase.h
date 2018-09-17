@@ -10,7 +10,7 @@
 #ifndef CZMTRACTIONSEPARATIONUOBASE_H
 #define CZMTRACTIONSEPARATIONUOBASE_H
 
-#include "DiscreteElementUserObject.h"
+#include "SideUserObject.h"
 #include "RankTwoTensor.h"
 
 class CZMTractionSeparationUOBase;
@@ -19,71 +19,61 @@ template <>
 InputParameters validParams<CZMTractionSeparationUOBase>();
 
 /**
-Traction sepration law basic user object
+Traction sepration law base user object
  */
-class CZMTractionSeparationUOBase : public DiscreteElementUserObject
+class CZMTractionSeparationUOBase : public SideUserObject
 {
 public:
   CZMTractionSeparationUOBase(const InputParameters & parameters);
 
   /// @{ Block all methods that are not used in explicitly called UOs
-  // virtual void initialize() override;
-  // virtual void execute() override final;
-  // virtual void finalize() override final;
-  // virtual void threadJoin(const UserObject &) override final;
+  virtual void initialize() override;
+  virtual void execute() override final;
+  virtual void finalize() override final;
+  virtual void threadJoin(const UserObject &) override final;
 
   /// return the number of stateful material properties
-  unsigned int getNumberHistoryVariables() const;
+  unsigned int getNumberStatefulMaterialProperies() const;
 
-  /// return the intiali values of the history variables
-  std::vector<Real> getHistoryVariablesIntialValues() const;
+  /// return the history variable name
+  std::string getStatefulMaterialProperyName(const unsigned int /*mp_index*/) const;
+
+  /// return the size of a history variable
+  unsigned int getStatefulMaterialProperySize(const unsigned int /*mp_index*/) const;
+
+  /// return the intial values of the history variables
+  std::vector<Real> getStatefulMaterialProperysIntialValues(const unsigned int /*mp_index*/) const;
+
+  /// retrun the initial values of a given material property
+  virtual std::vector<Real> getNewStatefulMaterialProperty(const unsigned int /*qp*/,
+                                                           const unsigned int /*mp_index*/) const;
 
   /// method returning if we are loading or unloading the material.
   /// this must bd overdden as different cohesive laws check load unload, differently
-  virtual bool checkLoadUnload(const std::vector<Real> /*current_jump*/,
-                               const std::vector<Real> /*old_jump*/) const;
+  virtual bool checkLoadUnload(const unsigned int /*qp*/) const;
 
-  virtual std::vector<Real> getNewStatefulMaterialProperty() const;
-
-  // /// initialization of stateful material properties
-  // virtual void initStatefulMaterialProperty(unsigned int /*materialPropertyID*/,
-  //                                           std::vector<Real> & /*statefulePropertyValue*/)
-  //                                           const;
-
-  /// method updating stateful material properties
-  // virtual void
-  // updateStatefulMaterialProperty(unsigned int /*qp*/,
-  //                                unsigned int /*materialPropertyID*/,
-  //                                std::vector<Real> & /*statefulePropertyValue*/,
-  //                                const std::vector<Real> & /*statefulePropertyValue_old*/) const;
+  ///method computing the effective jump according to the give traction sepration law
+  virtual Real getEffectiveJump(const unsigned int /*qp*/) const;
 
   /// method returning the traction value in local coordinates
-  virtual std::vector<Real>
-  computeTractionLocal(const std::vector<Real> /*current_stateful_MP*/,
-                       const std::vector<Real> /*old_statedul_MP*/,
-                       const std::vector<Real> /*current_displacement_jump*/,
-                       const std::vector<Real> /*old_displacement_jump*/,
-                       const std::vector<Real> other_current_required_mp = std::vector<Real>(),
-                       const std::vector<Real> other_old_required_mp = std::vector<Real>());
+  virtual std::vector<Real> computeTractionLocal(const unsigned int /*qp*/) const;
 
   /// method returning the traction derivates in local coordinates
-  virtual std::vector<std::vector<Real>> computeTractionSpatialDerivativeLocal(
-      const std::vector<Real> /*current_stateful_MP*/,
-      const std::vector<Real> /*old_statedul_MP*/,
-      const std::vector<Real> /*current_displacement_jump*/,
-      const std::vector<Real> /*old_displacement_jump*/,
-      const std::vector<Real> other_current_required_mp = std::vector<Real>(),
-      const std::vector<Real> other_old_required_mp = std::vector<Real>());
+  virtual std::vector<std::vector<Real>>
+  computeTractionSpatialDerivativeLocal(const unsigned int /*qp*/) const;
 
 protected:
   /// number of history variables present in the model
-  const unsigned int _n_history_variables;
-  const std::vector<Real> _history_variables_initial_values;
-  /// The dispalcement jump accross the interface
-  // const MaterialProperty<RealVectorValue> & _JumpLocal;
-  // // the variable containing the list of the stateful
-  // // material properties variables
-  // const std::vector<std::string> _cohesive_law_stateful_properties_names;
+  const unsigned int _n_stateful_mp;
+  const std::vector<std::string> _stateful_mp_names;
+  const std::vector<unsigned int> _stateful_mp_sizes;
+  const std::vector<std::vector<Real>> _stateful_mp_initial_values;
+
+  const std::string _displacement_jump_mp_name;
+  const MaterialProperty<std::vector<Real>> & _displacement_jump;
+  const MaterialProperty<std::vector<Real>> & _displacement_jump_old;
+
+  std::vector<std::vector<Real>> ResizeInitialValues() const;
 };
 
 #endif // CZMTRACTIONSEPARATIONUOBASE_H

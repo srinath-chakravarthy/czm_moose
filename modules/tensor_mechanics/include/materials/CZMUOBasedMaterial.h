@@ -34,8 +34,6 @@ protected:
   /// User objects that define the slip rate
   const CZMTractionSeparationUOBase & _traction_separation_UO;
 
-  const unsigned int _n_history_variables;
-
   /// the disaplcement jump in global coordiantes
   MaterialProperty<std::vector<Real>> & _displacement_jump;
 
@@ -62,8 +60,9 @@ protected:
   /// the material property in which the jacobian is stored
   MaterialProperty<std::vector<std::vector<Real>>> & _czm_jacobian;
 
-  MaterialProperty<std::vector<Real>> & _history_variables;
-  const MaterialProperty<std::vector<Real>> & _history_variables_old;
+  const unsigned int _n_uo_czm_properties;
+  std::vector<MaterialProperty<std::vector<Real>> *> _uo_czm_properties;
+  std::vector<const MaterialProperty<std::vector<Real>> *> _uo_czm_properties_old;
 
   // /// rotation matrix rotating a vector V to (0, 0, 1) i.e. _VLocal = R*_V
   // RealTensorValue _RotationGlobal2Local;

@@ -16,10 +16,9 @@ template <>
 InputParameters
 validParams<CohesiveLaw_3DC>()
 {
-  InputParameters params = validParams<TractionSeparationUOBase>();
+  InputParameters params = validParams<CZMTractionSeparationUOBase>();
   params.addClassDescription(
       "User Object implementing basic functions for traction separations law");
-
   params.addRequiredParam<std::vector<Real>>(
       "DeltaU0",
       "a vector containing the displacement value at which maximum"
@@ -33,7 +32,7 @@ validParams<CohesiveLaw_3DC>()
 }
 
 CohesiveLaw_3DC::CohesiveLaw_3DC(const InputParameters & parameters)
-  : TractionSeparationUOBase(parameters),
+  : CZMTractionSeparationUOBase(parameters),
     _deltaU0(getParam<std::vector<Real>>("DeltaU0")),
     _maxAllowableTraction(getParam<std::vector<Real>>("MaxAllowableTraction"))
 
@@ -53,17 +52,18 @@ CohesiveLaw_3DC::CohesiveLaw_3DC(const InputParameters & parameters)
   const_cast<std::vector<Real> &>(_maxAllowableTraction).push_back(_maxAllowableTraction[1]);
 }
 
-void
-CohesiveLaw_3DC::computeTractionLocal(unsigned int qp, RealVectorValue & TractionLocal) const
+std::vector<Real>
+CohesiveLaw_3DC::computeTractionLocal(unsigned int qp) const
 {
 
+  std::vector<Real> TractionLocal(3, 0);
   // convention N, T, S
   Real temp, X, expX, A_i, B_i;
 
   X = 0;
   for (unsigned int i = 0; i < 3; i++)
   {
-    temp = _JumpLocal[qp](i) / _deltaU0[i];
+    temp = _displacement_jump[qp][i] / _deltaU0[i];
     if (i > 0)
     {
       temp *= temp; // square for shear component
@@ -86,18 +86,19 @@ CohesiveLaw_3DC::computeTractionLocal(unsigned int qp, RealVectorValue & Tractio
     }
     A_i = _maxAllowableTraction[i] * temp;
 
-    B_i = _JumpLocal[qp](i) / _deltaU0[i];
+    B_i = _displacement_jump[qp][i] / _deltaU0[i];
 
-    TractionLocal(i) = A_i * B_i * expX;
+    TractionLocal[i] = A_i * B_i * expX;
   }
 
-  return;
+  return TractionLocal;
 }
 
-void
-CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(
-    unsigned int qp, RankTwoTensor & TractionDerivativeLocal) const
+std::vector<std::vector<Real>>
+CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(unsigned int qp) const
 {
+
+  std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
   // this function compute partial derivates of Tn[0][:], Tt[1][:], Ts[2][:]
   // w.r.t. dun, dut, dus
   // T_i = A_i*B_i*exp(-X) with:
@@ -119,7 +120,7 @@ CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(
   X = 0;
   for (i = 0; i < 3; i++)
   {
-    temp = _JumpLocal[qp](i) / _deltaU0[i];
+    temp = _displacement_jump[qp][i] / _deltaU0[i];
     if (i > 0)
       temp *= temp;
     X += temp;
@@ -145,7 +146,7 @@ CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(
     A_i *= _maxAllowableTraction[i];
 
     // compute B_i
-    B_i = _JumpLocal[qp](i) / _deltaU0[i];
+    B_i = _displacement_jump[qp][i] / _deltaU0[i];
 
     for (j = 0; j < 3; j++)
     {
@@ -161,12 +162,12 @@ CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(
       if (j == 0) // alpha = 1
         dX_duj = 1. / _deltaU0[j];
       else // alpha = 2
-        dX_duj = 2. * _JumpLocal[qp](j) / (_deltaU0[j] * _deltaU0[j]);
+        dX_duj = 2. * _displacement_jump[qp][j] / (_deltaU0[j] * _deltaU0[j]);
 
-      TractionDerivativeLocal(i, j) =
+      TractionDerivativeLocal[i][j] =
           A_i * expX * (dBi_dui - B_i * dX_duj); // the minus sign is due to exp(-X)
     }
   }
 
-  return;
+  return TractionDerivativeLocal;
 }
