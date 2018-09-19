@@ -48,36 +48,60 @@ CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters &
 
 {
   if (_n_stateful_mp != _stateful_mp_names.size())
+  {
+    std::cout << "_n_stateful_mp: " << _n_stateful_mp
+              << " stateful_mp_names: " << _stateful_mp_names.size() << std::endl;
+
+    for (unsigned int i = 0; i < _stateful_mp_names.size(); i++)
+      std::cout << _stateful_mp_names[i] << std::endl;
+    std::cout << std::endl;
     mooseError("CZMTractionSeparationUOBase:: n_stateful_mp does match with the number of supplied "
                "material properies names  stateful_mp_names");
+  }
   if (_n_stateful_mp != _stateful_mp_sizes.size())
+
     mooseError("CZMTractionSeparationUOBase:: n_stateful_mp does match with the number of supplied "
                "material properies sizes stateful_mp_sizes");
+
+  unsigned int total_size_stateful_mp_initial_values = 0;
+  for (unsigned int i = 0; i < _stateful_mp_initial_values.size(); i++)
+    total_size_stateful_mp_initial_values += _stateful_mp_initial_values[i].size();
+
   if (std::accumulate(_stateful_mp_sizes.begin(), _stateful_mp_sizes.end(), 0) !=
-      (int)_stateful_mp_initial_values.size())
+      (int)total_size_stateful_mp_initial_values)
+  {
+    std::cout << "_stateful_mp_sizes: "
+              << std::accumulate(_stateful_mp_sizes.begin(), _stateful_mp_sizes.end(), 0)
+              << " _stateful_mp_initial_values: " << (int)_stateful_mp_initial_values.size()
+              << std::endl;
+
     mooseError("CZMTractionSeparationUOBase:: the number of supplied initial values does not match "
                "the material properies size");
+  }
 }
 
 unsigned int
-CZMTractionSeparationUOBase::getNumberStatefulMaterialProperies() const
+CZMTractionSeparationUOBase::getNumberStatefulMaterialProperties() const
 {
   return _n_stateful_mp;
 }
 std::string
-CZMTractionSeparationUOBase::getStatefulMaterialProperyName(unsigned int mp_index) const
+CZMTractionSeparationUOBase::getStatefulMaterialPropertyName(unsigned int mp_index) const
 {
   return _stateful_mp_names[mp_index];
 }
 unsigned int
-CZMTractionSeparationUOBase::getStatefulMaterialProperySize(unsigned int mp_index) const
+CZMTractionSeparationUOBase::getStatefulMaterialPropertySize(unsigned int mp_index) const
 {
   return _stateful_mp_sizes[mp_index];
 }
 
 std::vector<Real>
-CZMTractionSeparationUOBase::getStatefulMaterialProperysIntialValues(unsigned int mp_index) const
+CZMTractionSeparationUOBase::getStatefulMaterialPropertysIntialValues(unsigned int mp_index) const
 {
+  // for (unsigned int i = 0; i < getStatefulMaterialPropertySize(mp_index); i++)
+  //   std::cout << "mp_index: " << mp_index
+  //             << " mp_inti_val : " << _stateful_mp_initial_values[mp_index][i] << std::endl;
   return _stateful_mp_initial_values[mp_index];
 }
 
@@ -113,6 +137,7 @@ CZMTractionSeparationUOBase::getNewStatefulMaterialProperty(unsigned int /*qp*/,
 std::vector<std::vector<Real>>
 CZMTractionSeparationUOBase::ResizeInitialValues() const
 {
+  std::cout << " ResizeInitialValues UO" << std::endl;
   std::vector<std::vector<Real>> temp;
   std::vector<Real> temp_init_values = getParam<std::vector<Real>>("stateful_mp_initial_values");
   unsigned int n_subvector = _stateful_mp_sizes.size();
@@ -128,6 +153,7 @@ CZMTractionSeparationUOBase::ResizeInitialValues() const
       c += 1;
     }
   }
+  std::cout << "done ResizeInitialValues" << std::endl;
   return temp;
 }
 

@@ -17,8 +17,7 @@ InputParameters
 validParams<CohesiveLaw_3DC>()
 {
   InputParameters params = validParams<CZMTractionSeparationUOBase>();
-  params.addClassDescription(
-      "User Object implementing basic functions for traction separations law");
+  params.addClassDescription("3DC cohseive law model, no damage");
   params.addRequiredParam<std::vector<Real>>(
       "DeltaU0",
       "a vector containing the displacement value at which maximum"

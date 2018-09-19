@@ -21,6 +21,12 @@ validParams<CZMUOBasedMaterial>()
   params.addRequiredParam<UserObjectName>(
       "traction_separation_UO",
       "the name of the user object including the traction separation law");
+  params.addParam<UserObjectName>(
+      "unload_traction_separation_UO",
+      "the name of the user object including the traction separation law");
+  params.addParam<UserObjectName>(
+      "coopenetration_penalty_UO",
+      "the name of the user object including the traction separation law");
   params.addRequiredParam<UserObjectName>(
       "displacement_jump_UO",
       "the name of the UO collecting bulk material property across an interface");
@@ -33,6 +39,15 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
   : Material(parameters),
     _displacement_jump_UO(getUserObject<DispJumpUO_QP>("displacement_jump_UO")),
     _traction_separation_UO(getUserObject<CZMTractionSeparationUOBase>("traction_separation_UO")),
+    _unload_traction_separation_UO(
+        parameters.isParamSetByUser("unload_traction_separation_UO")
+            ? getUserObject<CZMTractionSeparationUOBase>("unload_traction_separation_UO")
+            : getUserObject<CZMTractionSeparationUOBase>("traction_separation_UO")),
+    _coopenetration_penalty_UO(
+        parameters.isParamSetByUser("coopenetration_penalty_UO")
+            ? getUserObject<CZMTractionSeparationUOBase>("coopenetration_penalty_UO")
+            : getUserObject<CZMTractionSeparationUOBase>("traction_separation_UO")),
+
     _displacement_jump(declareProperty<std::vector<Real>>("displacement_jump")),
     _displacement_jump_local(declareProperty<std::vector<Real>>("displacement_jump_local")),
     _displacement_jump_local_old(
@@ -45,12 +60,13 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
         declareProperty<std::vector<std::vector<Real>>>("traction_spatial_derivatives_local")),
     _czm_residual(declareProperty<std::vector<Real>>("czm_residual")),
     _czm_jacobian(declareProperty<std::vector<std::vector<Real>>>("czm_jacobian")),
-    _n_uo_czm_properties(_traction_separation_UO.getNumberStatefulMaterialProperies())
+    _n_uo_czm_properties(_traction_separation_UO.getNumberStatefulMaterialProperties())
 
 {
 
   if (_n_uo_czm_properties > 0)
   {
+
     // initialize the userobject material property container
     _uo_czm_properties.resize(_n_uo_czm_properties);
     _uo_czm_properties_old.resize(_n_uo_czm_properties);
@@ -58,10 +74,10 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
     {
       // declare a material property
       _uo_czm_properties[mp_index] = &declareProperty<std::vector<Real>>(
-          _traction_separation_UO.getStatefulMaterialProperyName(mp_index));
+          _traction_separation_UO.getStatefulMaterialPropertyName(mp_index));
       // for a stateful material property get the old value
       _uo_czm_properties_old[mp_index] = &getMaterialPropertyOld<std::vector<Real>>(
-          _traction_separation_UO.getStatefulMaterialProperyName(mp_index));
+          _traction_separation_UO.getStatefulMaterialPropertyName(mp_index));
     }
   }
 }
@@ -94,7 +110,7 @@ CZMUOBasedMaterial::computeQpProperties()
   if (_n_uo_czm_properties > 0)
     for (unsigned int mp_index = 0; mp_index < _n_uo_czm_properties; mp_index++)
       (*_uo_czm_properties[mp_index])[_qp] =
-          _traction_separation_UO.getNewStatefulMaterialProperty(mp_index, _qp);
+          _traction_separation_UO.getNewStatefulMaterialProperty(_qp, mp_index);
 
   _traction[_qp] = rotateVector(_traction_local[_qp], RotationGlobal2Local, /*inverse =*/true);
   _traction_spatial_derivatives[_qp] = rotateTensor2(
@@ -122,8 +138,13 @@ CZMUOBasedMaterial::initQpStatefulProperties()
   if (_n_uo_czm_properties > 0)
   {
     for (unsigned int mp_index = 0; mp_index < _n_uo_czm_properties; mp_index++)
+    {
+      (*_uo_czm_properties[mp_index])[_qp].resize(
+          _traction_separation_UO.getStatefulMaterialPropertySize(mp_index));
+
       (*_uo_czm_properties[mp_index])[_qp] =
-          _traction_separation_UO.getStatefulMaterialProperysIntialValues(mp_index);
+          _traction_separation_UO.getStatefulMaterialPropertysIntialValues(mp_index);
+    }
   }
 }
 

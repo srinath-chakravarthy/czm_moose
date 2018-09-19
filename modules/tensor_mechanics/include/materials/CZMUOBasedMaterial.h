@@ -31,8 +31,13 @@ protected:
   /// User objects computing the displacement jump
   const DispJumpUO_QP & _displacement_jump_UO;
 
-  /// User objects that define the slip rate
+  /// User objectets defining the traction separation law
+  /// non linear TS law
   const CZMTractionSeparationUOBase & _traction_separation_UO;
+  /// unloading behavior for stateful laws
+  const CZMTractionSeparationUOBase & _unload_traction_separation_UO;
+  /// penalty for copentration behavior
+  const CZMTractionSeparationUOBase & _coopenetration_penalty_UO;
 
   /// the disaplcement jump in global coordiantes
   MaterialProperty<std::vector<Real>> & _displacement_jump;

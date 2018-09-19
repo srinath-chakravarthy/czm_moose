@@ -33,16 +33,16 @@ public:
   virtual void threadJoin(const UserObject &) override final;
 
   /// return the number of stateful material properties
-  unsigned int getNumberStatefulMaterialProperies() const;
+  unsigned int getNumberStatefulMaterialProperties() const;
 
   /// return the history variable name
-  std::string getStatefulMaterialProperyName(const unsigned int /*mp_index*/) const;
+  std::string getStatefulMaterialPropertyName(const unsigned int /*mp_index*/) const;
 
   /// return the size of a history variable
-  unsigned int getStatefulMaterialProperySize(const unsigned int /*mp_index*/) const;
+  unsigned int getStatefulMaterialPropertySize(const unsigned int /*mp_index*/) const;
 
   /// return the intial values of the history variables
-  std::vector<Real> getStatefulMaterialProperysIntialValues(const unsigned int /*mp_index*/) const;
+  std::vector<Real> getStatefulMaterialPropertysIntialValues(const unsigned int /*mp_index*/) const;
 
   /// retrun the initial values of a given material property
   virtual std::vector<Real> getNewStatefulMaterialProperty(const unsigned int /*qp*/,
