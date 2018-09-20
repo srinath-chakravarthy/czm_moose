@@ -42,7 +42,7 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
     _unload_traction_separation_UO(
         parameters.isParamSetByUser("unload_traction_separation_UO")
             ? getUserObject<CZMTractionSeparationUOBase>("unload_traction_separation_UO")
-            : getUserObject<CZMTractionSeparationUOBase>("traction_separation_UO")),
+            : _traction_separation_UO),
     _coopenetration_penalty_UO(
         parameters.isParamSetByUser("coopenetration_penalty_UO")
             ? getUserObject<CZMTractionSeparationUOBase>("coopenetration_penalty_UO")
@@ -60,7 +60,9 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
         declareProperty<std::vector<std::vector<Real>>>("traction_spatial_derivatives_local")),
     _czm_residual(declareProperty<std::vector<Real>>("czm_residual")),
     _czm_jacobian(declareProperty<std::vector<std::vector<Real>>>("czm_jacobian")),
-    _n_uo_czm_properties(_traction_separation_UO.getNumberStatefulMaterialProperties())
+    _n_uo_czm_properties(_traction_separation_UO.getNumberStatefulMaterialProperties()),
+    _n_non_stateful_uo_czm_properties(
+        _traction_separation_UO.getNumberNonStatefulMaterialProperties())
 
 {
   if (_n_uo_czm_properties > 0)
@@ -79,13 +81,32 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
           _traction_separation_UO.getStatefulMaterialPropertyName(mp_index));
     }
   }
+  if (_n_non_stateful_uo_czm_properties > 0)
+  {
+
+    // initialize the userobject material property container
+    _uo_non_stateful_czm_properties.resize(_n_non_stateful_uo_czm_properties);
+    for (unsigned int mp_index = 0; mp_index < _n_non_stateful_uo_czm_properties; mp_index++)
+    {
+      // declare a material property
+      _uo_non_stateful_czm_properties[mp_index] = &declareProperty<std::vector<Real>>(
+          _traction_separation_UO.getNonStatefulMaterialPropertyName(mp_index));
+    }
+  }
 }
 
 void
 CZMUOBasedMaterial::computeQpProperties()
 {
+  // resize non stateful mp
+  if (_n_non_stateful_uo_czm_properties > 0)
+    for (unsigned int mp_index = 0; mp_index < _n_non_stateful_uo_czm_properties; mp_index++)
+      (*_uo_non_stateful_czm_properties[mp_index])[_qp].resize(
+          _traction_separation_UO.getNonStatefulMaterialPropertySize(mp_index));
+
   _displacement_jump[_qp].resize(3, 0);
   _displacement_jump_local[_qp].resize(3, 0);
+
   _traction[_qp].resize(3, 0);
   _traction_local[_qp].resize(3, 0);
   _traction_spatial_derivatives[_qp].resize(3, std::vector<Real>(3, 0));
@@ -102,14 +123,18 @@ CZMUOBasedMaterial::computeQpProperties()
 
   _displacement_jump_local[_qp] = rotateVector(_displacement_jump[_qp], RotationGlobal2Local);
 
-  _traction_local[_qp] = _traction_separation_UO.computeTractionLocal(_qp);
-  _traction_spatial_derivatives_local[_qp] =
-      _traction_separation_UO.computeTractionSpatialDerivativeLocal(_qp);
-
   if (_n_uo_czm_properties > 0)
     for (unsigned int mp_index = 0; mp_index < _n_uo_czm_properties; mp_index++)
       (*_uo_czm_properties[mp_index])[_qp] =
           _traction_separation_UO.getNewStatefulMaterialProperty(_qp, mp_index);
+  if (_n_non_stateful_uo_czm_properties > 0)
+    for (unsigned int mp_index = 0; mp_index < _n_non_stateful_uo_czm_properties; mp_index++)
+      (*_uo_non_stateful_czm_properties[mp_index])[_qp] =
+          _traction_separation_UO.getNewNonStatefulMaterialProperty(_qp, mp_index);
+
+  _traction_local[_qp] = _traction_separation_UO.computeTractionLocal(_qp);
+  _traction_spatial_derivatives_local[_qp] =
+      _traction_separation_UO.computeTractionSpatialDerivativeLocal(_qp);
 
   selectCzmUO(_qp);
 
@@ -187,8 +212,9 @@ CZMUOBasedMaterial::rotateTensor2(const std::vector<std::vector<Real>> T,
 void
 CZMUOBasedMaterial::selectCzmUO(unsigned int qp)
 {
+  // if
   _selected_CZM_UO = &_coopenetration_penalty_UO;
   // const CZMTractionSeparationUOBase * selected_CZM_UO = &_unload_traction_separation_UO;
-  Real e_j = _selected_CZM_UO->getEffectiveJump(qp);
-  std::cout << "e_j" << e_j << std::endl;
+  // Real e_j = _selected_CZM_UO->getEffectiveJump(qp);
+  // std::cout << "e_j" << e_j << std::endl;
 }

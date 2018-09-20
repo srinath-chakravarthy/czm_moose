@@ -69,8 +69,10 @@ protected:
   MaterialProperty<std::vector<std::vector<Real>>> & _czm_jacobian;
 
   const unsigned int _n_uo_czm_properties;
+  const unsigned int _n_non_stateful_uo_czm_properties;
   std::vector<MaterialProperty<std::vector<Real>> *> _uo_czm_properties;
   std::vector<const MaterialProperty<std::vector<Real>> *> _uo_czm_properties_old;
+  std::vector<MaterialProperty<std::vector<Real>> *> _uo_non_stateful_czm_properties;
 
   /// method selecting proper UO depending on laoding state
   void selectCzmUO(unsigned int qp);

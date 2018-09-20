@@ -31,23 +31,34 @@ public:
 
   std::vector<Real> getNewStatefulMaterialProperty(unsigned int qp,
                                                    unsigned int mp_index) const override;
+  std::vector<Real> getNewNonStatefulMaterialProperty(unsigned int qp,
+                                                      unsigned int mp_index) const override;
 
   Real getEffectiveJump(unsigned int /*qp*/) const override;
+
+  unsigned int select_CZM_UO(unsigned int /*qp*/) const;
 
 protected:
   // cohesive law parameters
   const Real _displacement_jump_peak;
   const Real _traction_peak;
   const Real _beta;
+
+  const MaterialProperty<std::vector<Real>> & _effective_jump;
+  const MaterialProperty<std::vector<Real>> & _effective_jump_old;
   const MaterialProperty<std::vector<Real>> & _max_effective_jump_old;
   const MaterialProperty<std::vector<Real>> & _max_effective_traction_old;
 
-  Real getEffectiveTractionNonLinear(unsigned int /*qp*/) const;
-  Real getEffectiveTractionLinear(unsigned int /*qp*/) const;
-  std::vector<Real> getTractionNonLinear(unsigned int /*qp*/) const;
-  std::vector<Real> getTractionLinear(unsigned int /*qp*/) const;
-  std::vector<std::vector<Real>> getTractionSpatialDerivativeNonLinear(unsigned int /*qp*/) const;
-  std::vector<std::vector<Real>> getTractionSpatialDerivativeLinear(unsigned int /*qp*/) const;
+  const MaterialProperty<std::vector<Real>> & _weighted_displacement_jump;
+  const MaterialProperty<std::vector<Real>> & _effective_traction;
+
+  Real getEffectiveTraction(unsigned int /*qp*/) const;
+  // Real getEffectiveTractionLinear(unsigned int /*qp*/) const;
+  // std::vector<Real> getTractionNonLinear(unsigned int /*qp*/) const;
+  // std::vector<Real> getTractionLinear(unsigned int /*qp*/) const;
+  // std::vector<std::vector<Real>> getTractionSpatialDerivativeNonLinear(unsigned int /*qp*/)
+  // const; std::vector<std::vector<Real>> getTractionSpatialDerivativeLinear(unsigned int /*qp*/)
+  // const;
 };
 
 #endif // COHESIVELAW_EXPONENTIAL_H

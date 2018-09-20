@@ -17,12 +17,20 @@ InputParameters
 validParams<czmUnloadLinear>()
 {
   InputParameters params = validParams<CZMTractionSeparationUOBase>();
-  params.addClassDescription("Simple Exponential cohseive law model, with damage");
+  params.addParam<std::string>("max_effective_jump_mp_name",
+                               "max_effective_jump",
+                               "name fo the mp representing the effective jump");
+  params.addParam<std::string>("max_linear_traction_mp_name",
+                               "max_effective_traction",
+                               "name fo the mp representing the maximum linear traction_peak");
+  params.addClassDescription("Linear unloading for damged material");
   return params;
 }
 
 czmUnloadLinear::czmUnloadLinear(const InputParameters & parameters)
-  : CZMTractionSeparationUOBase(parameters)
+  : CZMTractionSeparationUOBase(parameters),
+  _max_effective_jump(getMaterialPropertyOldByName<std::vector<Real>>(getParam<std::string>("max_effective_jump_mp_name")),
+  _max_effective_linear_traction(getMaterialPropertyOldByName<std::vector<Real>>(getParam<std::string>("max_linear_traction_mp_name"))
 {
 }
 
@@ -31,7 +39,7 @@ czmUnloadLinear::computeTractionLocal(unsigned int qp) const
 {
   std::vector<Real> TractionLocal(3, 0);
 
-  Real T = _max_effective_traction_old[qp][0] / _max_effective_jump_old[qp][0];
+  Real T = _max_effective_linear_traction[qp][0] / _max_effective_jump[qp][0];
 
   for (unsigned int i = 0; i < 3; i++)
   {
@@ -44,7 +52,6 @@ czmUnloadLinear::computeTractionLocal(unsigned int qp) const
   return TractionLocal;
 }
 
-
 std::vector<std::vector<Real>>
 CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) const
 {
@@ -53,17 +60,9 @@ CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) 
   return TractionDerivativeLocal;
 }
 
-
-
-
-
-
-
-
 std::vector<Real>
 czmUnloadLinear::getTractionLinear(unsigned int qp) const
 {
-
 }
 
 Real

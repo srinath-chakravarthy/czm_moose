@@ -48,6 +48,20 @@ public:
   virtual std::vector<Real> getNewStatefulMaterialProperty(const unsigned int /*qp*/,
                                                            const unsigned int /*mp_index*/) const;
 
+  /// return the number of stateful material properties
+  unsigned int getNumberNonStatefulMaterialProperties() const;
+
+  /// return the history variable name
+  std::string getNonStatefulMaterialPropertyName(const unsigned int /*mp_index*/) const;
+
+  /// return the size of a history variable
+  unsigned int getNonStatefulMaterialPropertySize(const unsigned int /*mp_index*/) const;
+
+  /// retrun the initial values of a given material property
+  virtual std::vector<Real>
+  getNewNonStatefulMaterialProperty(const unsigned int /*qp*/,
+                                    const unsigned int /*mp_index*/) const;
+
   /// method returning if we are loading or unloading the material.
   /// this must bd overdden as different cohesive laws check load unload, differently
   virtual bool checkLoadUnload(const unsigned int /*qp*/) const;
@@ -68,6 +82,9 @@ protected:
   const std::vector<std::string> _stateful_mp_names;
   const std::vector<unsigned int> _stateful_mp_sizes;
   const std::vector<std::vector<Real>> _stateful_mp_initial_values;
+  const unsigned int _n_non_stateful_mp;
+  const std::vector<std::string> _non_stateful_mp_names;
+  const std::vector<unsigned int> _non_stateful_mp_sizes;
 
   const std::string _displacement_jump_mp_name;
   const MaterialProperty<std::vector<Real>> & _displacement_jump;

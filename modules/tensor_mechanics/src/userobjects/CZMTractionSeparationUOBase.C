@@ -28,6 +28,14 @@ validParams<CZMTractionSeparationUOBase>()
                                              "size of each stateful material properties");
   params.addParam<std::vector<Real>>(
       "stateful_mp_initial_values", std::vector<Real>(0), "intial material proeprties values");
+  params.addRequiredParam<unsigned int>("n_non_stateful_mp",
+                                        "number of NON-stateful material properties");
+  params.addParam<std::vector<std::string>>("non_stateful_mp_names",
+                                            std::vector<std::string>(0),
+                                            "name of NON stateful material properties");
+  params.addParam<std::vector<unsigned int>>("non_stateful_mp_sizes",
+                                             std::vector<unsigned int>(0),
+                                             "size of each NON stateful material properties");
   params.addRequiredParam<std::string>("displacement_jump_mp_name",
                                        "the name of the material property hosting the displacement "
                                        "jump computed in natural element coordinate system");
@@ -41,6 +49,9 @@ CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters &
     _stateful_mp_names(getParam<std::vector<std::string>>("stateful_mp_names")),
     _stateful_mp_sizes(getParam<std::vector<unsigned int>>("stateful_mp_sizes")),
     _stateful_mp_initial_values(ResizeInitialValues()),
+    _n_non_stateful_mp(getParam<unsigned int>("n_non_stateful_mp")),
+    _non_stateful_mp_names(getParam<std::vector<std::string>>("non_stateful_mp_names")),
+    _non_stateful_mp_sizes(getParam<std::vector<unsigned int>>("non_stateful_mp_sizes")),
     _displacement_jump(getMaterialPropertyByName<std::vector<Real>>(
         getParam<std::string>("displacement_jump_mp_name"))),
     _displacement_jump_old(getMaterialPropertyOldByName<std::vector<Real>>(
@@ -85,11 +96,13 @@ CZMTractionSeparationUOBase::getNumberStatefulMaterialProperties() const
 {
   return _n_stateful_mp;
 }
+
 std::string
 CZMTractionSeparationUOBase::getStatefulMaterialPropertyName(unsigned int mp_index) const
 {
   return _stateful_mp_names[mp_index];
 }
+
 unsigned int
 CZMTractionSeparationUOBase::getStatefulMaterialPropertySize(unsigned int mp_index) const
 {
@@ -99,10 +112,41 @@ CZMTractionSeparationUOBase::getStatefulMaterialPropertySize(unsigned int mp_ind
 std::vector<Real>
 CZMTractionSeparationUOBase::getStatefulMaterialPropertysIntialValues(unsigned int mp_index) const
 {
-  // for (unsigned int i = 0; i < getStatefulMaterialPropertySize(mp_index); i++)
-  //   std::cout << "mp_index: " << mp_index
-  //             << " mp_inti_val : " << _stateful_mp_initial_values[mp_index][i] << std::endl;
   return _stateful_mp_initial_values[mp_index];
+}
+
+std::vector<Real>
+CZMTractionSeparationUOBase::getNewStatefulMaterialProperty(unsigned int /*qp*/,
+                                                            unsigned int /*mp_index*/) const
+{
+  mooseError("CZMTractionSeparationUOBase::getNewStatefulMaterialProperty should never "
+             "be called directly but always subclassed");
+}
+
+unsigned int
+CZMTractionSeparationUOBase::getNumberNonStatefulMaterialProperties() const
+{
+  return _n_non_stateful_mp;
+}
+
+std::string
+CZMTractionSeparationUOBase::getNonStatefulMaterialPropertyName(unsigned int mp_index) const
+{
+  return _non_stateful_mp_names[mp_index];
+}
+
+unsigned int
+CZMTractionSeparationUOBase::getNonStatefulMaterialPropertySize(unsigned int mp_index) const
+{
+  return _non_stateful_mp_sizes[mp_index];
+}
+
+std::vector<Real>
+CZMTractionSeparationUOBase::getNewNonStatefulMaterialProperty(unsigned int /*qp*/,
+                                                               unsigned int /*mp_index*/) const
+{
+  mooseError("CZMTractionSeparationUOBase::getNewStatefulMaterialProperty should never "
+             "be called directly but always subclassed");
 }
 
 bool
@@ -126,18 +170,9 @@ CZMTractionSeparationUOBase::computeTractionSpatialDerivativeLocal(unsigned int 
              "be called directly but always subclassed");
 }
 
-std::vector<Real>
-CZMTractionSeparationUOBase::getNewStatefulMaterialProperty(unsigned int /*qp*/,
-                                                            unsigned int /*mp_index*/) const
-{
-  mooseError("CZMTractionSeparationUOBase::getNewStatefulMaterialProperty should never "
-             "be called directly but always subclassed");
-}
-
 std::vector<std::vector<Real>>
 CZMTractionSeparationUOBase::ResizeInitialValues() const
 {
-  std::cout << " ResizeInitialValues UO" << std::endl;
   std::vector<std::vector<Real>> temp;
   std::vector<Real> temp_init_values = getParam<std::vector<Real>>("stateful_mp_initial_values");
   unsigned int n_subvector = _stateful_mp_sizes.size();
@@ -153,7 +188,6 @@ CZMTractionSeparationUOBase::ResizeInitialValues() const
       c += 1;
     }
   }
-  std::cout << "done ResizeInitialValues" << std::endl;
   return temp;
 }
 

@@ -239,10 +239,10 @@
   [../]
   [./cohesive_law_exponential]
     type = CohesiveLaw_Exponential
-    stateful_mp_names = 'max_effective_jump max_effective_traction'
-    stateful_mp_sizes ='1 1'
-    stateful_mp_initial_values ='0 0'
-    displacement_jump_peak = 1
+    # stateful_mp_names = 'max_effective_jump max_effective_traction'
+    # stateful_mp_sizes ='1 1'
+    # stateful_mp_initial_values ='0 0'
+    displacement_jump_peak = 0.01
     traction_peak = 150
     displacement_jump_mp_name = 'displacement_jump_local'
     boundary = 'interface'
@@ -292,9 +292,9 @@
   l_tol = 1e-10
   l_max_its = 50
   start_time = 0.0
-  dt = 10
-  end_time = 500
-  dtmin = 1
+  dt = 0.2
+  end_time = 5
+  dtmin = 0.2
   line_search = none
 []
 [Outputs]
