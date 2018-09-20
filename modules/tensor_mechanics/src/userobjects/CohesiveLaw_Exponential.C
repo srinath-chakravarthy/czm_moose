@@ -59,10 +59,16 @@ CohesiveLaw_Exponential::computeTractionLocal(unsigned int qp) const
 }
 
 std::vector<std::vector<Real>>
-CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) const
+CohesiveLaw_Exponential::getTractionSpatialDerivativeLinear(unsigned int qp) const
 {
+  std::vector<std::vector<Real>> TractionDerivativeLinear(3, std::vector<Real>(3, 0));
+  return TractionDerivativeLinear;
+}
 
-  std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
+std::vector<std::vector<Real>>
+CohesiveLaw_Exponential::getTractionSpatialDerivativeNonLinear(unsigned int qp) const
+{
+  std::vector<std::vector<Real>> TractionDerivativeNonLinear(3, std::vector<Real>(3, 0));
   Real T_eff = getEffectiveTractionNonLinear(qp);
   Real D_eff = getEffectiveJump(qp);
 
@@ -89,14 +95,23 @@ CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) 
           offdiag_term *= beta2;
 
         offdiag_term *= _displacement_jump[qp][i] * _displacement_jump[qp][j] / D_eff_D_p;
-        TractionDerivativeLocal[i][j] = T_eff * (diag_term - offdiag_term);
+        TractionDerivativeNonLinear[i][j] = T_eff * (diag_term - offdiag_term);
       }
   }
   else
   {
     for (unsigned int i = 0; i < 3; i++)
-      TractionDerivativeLocal[i][i] = std::exp(1) * _traction_peak / _displacement_jump_peak;
+      TractionDerivativeNonLinear[i][i] = std::exp(1) * _traction_peak / _displacement_jump_peak;
   }
+
+  return TractionDerivativeNonLinear;
+}
+
+std::vector<std::vector<Real>>
+CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) const
+{
+  std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
+  TractionDerivativeLocal = getTractionSpatialDerivativeNonLinear(qp);
   return TractionDerivativeLocal;
 }
 

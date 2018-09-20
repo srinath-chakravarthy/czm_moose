@@ -39,6 +39,9 @@ protected:
   /// penalty for copentration behavior
   const CZMTractionSeparationUOBase & _coopenetration_penalty_UO;
 
+  /// penalty for copentration behavior
+  const CZMTractionSeparationUOBase * _selected_CZM_UO;
+
   /// the disaplcement jump in global coordiantes
   MaterialProperty<std::vector<Real>> & _displacement_jump;
 
@@ -69,8 +72,8 @@ protected:
   std::vector<MaterialProperty<std::vector<Real>> *> _uo_czm_properties;
   std::vector<const MaterialProperty<std::vector<Real>> *> _uo_czm_properties_old;
 
-  // /// rotation matrix rotating a vector V to (0, 0, 1) i.e. _VLocal = R*_V
-  // RealTensorValue _RotationGlobal2Local;
+  /// method selecting proper UO depending on laoding state
+  void selectCzmUO(unsigned int qp);
 
   /// Rotate a vector "T" via the rotation matrix "R".
   /// inverse rotation is achieved by setting "inverse" = true

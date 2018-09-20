@@ -46,8 +46,8 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
     _coopenetration_penalty_UO(
         parameters.isParamSetByUser("coopenetration_penalty_UO")
             ? getUserObject<CZMTractionSeparationUOBase>("coopenetration_penalty_UO")
-            : getUserObject<CZMTractionSeparationUOBase>("traction_separation_UO")),
-
+            : _unload_traction_separation_UO),
+    _selected_CZM_UO(&_unload_traction_separation_UO),
     _displacement_jump(declareProperty<std::vector<Real>>("displacement_jump")),
     _displacement_jump_local(declareProperty<std::vector<Real>>("displacement_jump_local")),
     _displacement_jump_local_old(
@@ -63,7 +63,6 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
     _n_uo_czm_properties(_traction_separation_UO.getNumberStatefulMaterialProperties())
 
 {
-
   if (_n_uo_czm_properties > 0)
   {
 
@@ -111,6 +110,8 @@ CZMUOBasedMaterial::computeQpProperties()
     for (unsigned int mp_index = 0; mp_index < _n_uo_czm_properties; mp_index++)
       (*_uo_czm_properties[mp_index])[_qp] =
           _traction_separation_UO.getNewStatefulMaterialProperty(_qp, mp_index);
+
+  selectCzmUO(_qp);
 
   _traction[_qp] = rotateVector(_traction_local[_qp], RotationGlobal2Local, /*inverse =*/true);
   _traction_spatial_derivatives[_qp] = rotateTensor2(
@@ -181,4 +182,13 @@ CZMUOBasedMaterial::rotateTensor2(const std::vector<std::vector<Real>> T,
         for (unsigned int l = 0; l < 3; l++)
           trot[i][j] += R_loc(i, k) * R_loc(j, l) * T[k][l];
   return trot;
+}
+
+void
+CZMUOBasedMaterial::selectCzmUO(unsigned int qp)
+{
+  _selected_CZM_UO = &_coopenetration_penalty_UO;
+  // const CZMTractionSeparationUOBase * selected_CZM_UO = &_unload_traction_separation_UO;
+  Real e_j = _selected_CZM_UO->getEffectiveJump(qp);
+  std::cout << "e_j" << e_j << std::endl;
 }
