@@ -67,7 +67,6 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
 {
   if (_n_uo_czm_properties > 0)
   {
-
     // initialize the userobject material property container
     _uo_czm_properties.resize(_n_uo_czm_properties);
     _uo_czm_properties_old.resize(_n_uo_czm_properties);
@@ -81,9 +80,9 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
           _traction_separation_UO.getStatefulMaterialPropertyName(mp_index));
     }
   }
+
   if (_n_non_stateful_uo_czm_properties > 0)
   {
-
     // initialize the userobject material property container
     _uo_non_stateful_czm_properties.resize(_n_non_stateful_uo_czm_properties);
     for (unsigned int mp_index = 0; mp_index < _n_non_stateful_uo_czm_properties; mp_index++)
@@ -132,11 +131,10 @@ CZMUOBasedMaterial::computeQpProperties()
       (*_uo_non_stateful_czm_properties[mp_index])[_qp] =
           _traction_separation_UO.getNewNonStatefulMaterialProperty(_qp, mp_index);
 
-  _traction_local[_qp] = _traction_separation_UO.computeTractionLocal(_qp);
+  selectCzmUO();
+  _traction_local[_qp] = _selected_CZM_UO->computeTractionLocal(_qp);
   _traction_spatial_derivatives_local[_qp] =
-      _traction_separation_UO.computeTractionSpatialDerivativeLocal(_qp);
-
-  selectCzmUO(_qp);
+      _selected_CZM_UO->computeTractionSpatialDerivativeLocal(_qp);
 
   _traction[_qp] = rotateVector(_traction_local[_qp], RotationGlobal2Local, /*inverse =*/true);
   _traction_spatial_derivatives[_qp] = rotateTensor2(
@@ -210,11 +208,22 @@ CZMUOBasedMaterial::rotateTensor2(const std::vector<std::vector<Real>> T,
 }
 
 void
-CZMUOBasedMaterial::selectCzmUO(unsigned int qp)
+CZMUOBasedMaterial::selectCzmUO()
 {
-  // if
-  _selected_CZM_UO = &_coopenetration_penalty_UO;
-  // const CZMTractionSeparationUOBase * selected_CZM_UO = &_unload_traction_separation_UO;
-  // Real e_j = _selected_CZM_UO->getEffectiveJump(qp);
-  // std::cout << "e_j" << e_j << std::endl;
+  unsigned int uo_id = _traction_separation_UO.checkLoadUnload(_qp);
+  std::cout << "uo_id " << uo_id << std::endl;
+  switch (uo_id)
+  {
+    case (unsigned int)0:
+      _selected_CZM_UO = &_traction_separation_UO;
+      break;
+    case (unsigned int)1:
+      _selected_CZM_UO = &_unload_traction_separation_UO;
+      break;
+    case (unsigned int)2:
+      _selected_CZM_UO = &_coopenetration_penalty_UO;
+      break;
+    default:
+      mooseError("CZMUOBasedMaterial:: something is wrong, selecting wrong UO");
+  }
 }

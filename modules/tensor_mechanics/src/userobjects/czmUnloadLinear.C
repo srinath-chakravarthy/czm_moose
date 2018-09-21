@@ -53,7 +53,7 @@ czmUnloadLinear::computeTractionLocal(unsigned int qp) const
 }
 
 std::vector<std::vector<Real>>
-CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) const
+czmUnloadLinear::computeTractionSpatialDerivativeLocal(unsigned int qp) const
 {
   std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
   TractionDerivativeLocal = getTractionSpatialDerivativeNonLinear(qp);

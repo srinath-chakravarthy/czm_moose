@@ -7,23 +7,23 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef COHESIVELAW_EXPONENTIAL_H
-#define COHESIVELAW_EXPONENTIAL_H
+#ifndef CZMUNLOADLINAER_H
+#define CZMUNLOADLINAER_H
 
 #include "CZMTractionSeparationUOBase.h"
 
-class CohesiveLaw_Exponential;
+class czmUnloadLinear;
 
 template <>
-InputParameters validParams<CohesiveLaw_Exponential>();
+InputParameters validParams<czmUnloadLinear>();
 
 /**
 Traction sepration law basic user object
  */
-class CohesiveLaw_Exponential : public CZMTractionSeparationUOBase
+class czmUnloadLinear : public CZMTractionSeparationUOBase
 {
 public:
-  CohesiveLaw_Exponential(const InputParameters & parameters);
+  czmUnloadLinear(const InputParameters & parameters);
 
   std::vector<Real> computeTractionLocal(unsigned int qp) const override;
   std::vector<std::vector<Real>>
@@ -61,4 +61,4 @@ protected:
   // const;
 };
 
-#endif // COHESIVELAW_EXPONENTIAL_H
+#endif // CZMUNLOADLINAER_H

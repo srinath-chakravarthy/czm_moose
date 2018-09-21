@@ -149,7 +149,7 @@ CZMTractionSeparationUOBase::getNewNonStatefulMaterialProperty(unsigned int /*qp
              "be called directly but always subclassed");
 }
 
-bool
+unsigned int
 CZMTractionSeparationUOBase::checkLoadUnload(const unsigned int /*qp*/) const
 {
   mooseError("CZMTractionSeparationUOBase::checkLoadUnload should never "

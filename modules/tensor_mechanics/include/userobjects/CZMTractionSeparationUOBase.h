@@ -64,7 +64,7 @@ public:
 
   /// method returning if we are loading or unloading the material.
   /// this must bd overdden as different cohesive laws check load unload, differently
-  virtual bool checkLoadUnload(const unsigned int /*qp*/) const;
+  virtual unsigned int checkLoadUnload(const unsigned int /*qp*/) const;
 
   ///method computing the effective jump according to the give traction sepration law
   virtual Real getEffectiveJump(const unsigned int /*qp*/) const;

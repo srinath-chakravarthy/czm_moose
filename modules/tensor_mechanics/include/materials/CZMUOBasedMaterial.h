@@ -75,7 +75,7 @@ protected:
   std::vector<MaterialProperty<std::vector<Real>> *> _uo_non_stateful_czm_properties;
 
   /// method selecting proper UO depending on laoding state
-  void selectCzmUO(unsigned int qp);
+  void selectCzmUO();
 
   /// Rotate a vector "T" via the rotation matrix "R".
   /// inverse rotation is achieved by setting "inverse" = true

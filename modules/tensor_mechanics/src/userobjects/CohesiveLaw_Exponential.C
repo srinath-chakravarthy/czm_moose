@@ -68,17 +68,17 @@ CohesiveLaw_Exponential::CohesiveLaw_Exponential(const InputParameters & paramet
 
 ///
 unsigned int
-CohesiveLaw_Exponential::select_CZM_UO(unsigned int qp) const
+CohesiveLaw_Exponential::checkLoadUnload(const unsigned int qp) const
 {
 
   // no copenatration
   if (_displacement_jump[qp][0] >= 0)
   {
     // loading
-    if (_effective_jump[0] > _effective_jump_old[0])
+    if (_effective_jump[qp][0] >= _effective_jump_old[qp][0])
     {
-      if (_effective_jump[0] > _max_effective_jump_old[0]) // no damage
-        return 0;                                          // select non linear CZM
+      if (_effective_jump[qp][0] >= _max_effective_jump_old[qp][0]) // no damage
+        return 0;                                                   // select non linear CZM
       else
         return 1; // linear
                   // check for damage
@@ -96,15 +96,8 @@ CohesiveLaw_Exponential::computeTractionLocal(unsigned int qp) const
 {
   std::vector<Real> TractionLocal(3, 0);
 
-  Real effective_traction_nl = _effective_traction[qp][0];
-
   for (unsigned int i = 0; i < 3; i++)
-  {
-    Real d_jump = _displacement_jump[qp][i];
-    if (i > 0)
-      d_jump *= _beta * _beta;
-    TractionLocal[i] = effective_traction_nl * d_jump;
-  }
+    TractionLocal[i] = _effective_traction[qp][0] * _weighted_displacement_jump[qp][i];
 
   return TractionLocal;
 }
@@ -116,11 +109,11 @@ CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) 
   std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
   Real T_eff = _effective_traction[qp][0];
   Real D_eff = _effective_jump[qp][0];
+  Real beta2 = std::pow(_beta, 2);
 
-  if (D_eff > 0)
+  if (D_eff > 0) // TODO NEED TO FIX DERIVATIVES AT 0!!!!!
   {
     Real D_eff_D_p = D_eff * _displacement_jump_peak;
-    Real beta2 = std::pow(_beta, 2);
 
     for (unsigned int i = 0; i < 3; i++)
       for (unsigned int j = 0; j < 3; j++)
@@ -133,15 +126,20 @@ CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) 
             diag_term *= beta2;
         }
 
-        Real offdiag_term = 1;
-        if (i > 1)
-          offdiag_term *= beta2;
-        if (j > 1)
-          offdiag_term *= beta2;
+        Real offdiag_term =
+            _weighted_displacement_jump[qp][i] * _weighted_displacement_jump[qp][j] / D_eff_D_p;
 
-        offdiag_term *= _displacement_jump[qp][i] * _displacement_jump[qp][j] / D_eff_D_p;
         TractionDerivativeLocal[i][j] = T_eff * (diag_term - offdiag_term);
       }
+  }
+  else if (D_eff == 0)
+  {
+    for (unsigned int i = 0; i < 3; i++)
+    {
+      TractionDerivativeLocal[i][i] = T_eff;
+      if (i > 0)
+        TractionDerivativeLocal[i][i] *= beta2;
+    }
   }
   return TractionDerivativeLocal;
 }

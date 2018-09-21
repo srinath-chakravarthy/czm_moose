@@ -296,6 +296,7 @@
   end_time = 5
   dtmin = 0.2
   line_search = none
+  num_steps = 1
 []
 [Outputs]
   [./out]
