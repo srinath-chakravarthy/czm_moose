@@ -30,13 +30,14 @@ validParams<CohesiveLaw_Exponential>()
                                      std::vector<Real>{0, 0, 0},
                                      "intial material proeprties values");
   params.addParam<unsigned int>(
-      "n_non_stateful_mp", 2, "number of NON-stateful material properties");
-  params.addParam<std::vector<std::string>>(
-      "non_stateful_mp_names",
-      std::vector<std::string>{"weighted_displacement_jump", "effective_traction_nl"},
-      "name of NON stateful material properties");
+      "n_non_stateful_mp", 3, "number of NON-stateful material properties");
+  params.addParam<std::vector<std::string>>("non_stateful_mp_names",
+                                            std::vector<std::string>{"weighted_displacement_jump",
+                                                                     "effective_traction_nl",
+                                                                     "displacement_jump_weights"},
+                                            "name of NON stateful material properties");
   params.addParam<std::vector<unsigned int>>("non_stateful_mp_sizes",
-                                             std::vector<unsigned int>{3, 1},
+                                             std::vector<unsigned int>{3, 1, 3},
                                              "size of each stateful material properties");
   params.addRequiredParam<Real>(
       "displacement_jump_peak",
@@ -70,7 +71,14 @@ CohesiveLaw_Exponential::CohesiveLaw_Exponential(const InputParameters & paramet
 unsigned int
 CohesiveLaw_Exponential::checkLoadUnload(const unsigned int qp) const
 {
-
+  // first step _max_effective_jump_old ==0
+  if (_max_effective_jump_old[qp][0] == 0)
+  {
+    if (_displacement_jump[qp][0] >= 0)
+      return 0;
+    else
+      return 2;
+  }
   // no copenatration
   if (_displacement_jump[qp][0] >= 0)
   {
@@ -201,6 +209,14 @@ CohesiveLaw_Exponential::getNewNonStatefulMaterialProperty(unsigned int qp,
   }
   else if (mp_index == 1) /*effective traction*/
     temp[0] = getEffectiveTraction(qp);
+  else if (mp_index == 2) /*DISPALCEMENT JUMP WEIGTHS*/
+    for (unsigned int i = 0; i < 3; i++)
+    {
+      temp[i] = 1;
+      if (i > 0)
+        temp[i] *= _beta * _beta;
+    }
+
   return temp;
 }
 
@@ -221,7 +237,7 @@ CohesiveLaw_Exponential::getNewStatefulMaterialProperty(unsigned int qp,
   {
     temp[0] = _max_effective_traction_old[qp][0];
     if (_effective_jump[qp][0] > _max_effective_jump_old[qp][0] && _displacement_jump[qp][0] > 0)
-      temp[0] = getEffectiveTraction(qp) / _effective_jump[qp][0];
+      temp[0] = getEffectiveTraction(qp) * _effective_jump[qp][0];
   }
 
   return temp;

@@ -68,6 +68,8 @@ protected:
   /// the material property in which the jacobian is stored
   MaterialProperty<std::vector<std::vector<Real>>> & _czm_jacobian;
 
+  unsigned int _uo_id;
+
   const unsigned int _n_uo_czm_properties;
   const unsigned int _n_non_stateful_uo_czm_properties;
   std::vector<MaterialProperty<std::vector<Real>> *> _uo_czm_properties;
