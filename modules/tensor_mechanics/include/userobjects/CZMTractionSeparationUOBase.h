@@ -70,11 +70,10 @@ public:
   virtual Real getEffectiveJump(const unsigned int /*qp*/) const;
 
   /// method returning the traction value in local coordinates
-  virtual std::vector<Real> computeTractionLocal(const unsigned int /*qp*/) const;
+  virtual RealVectorValue computeTractionLocal(const unsigned int /*qp*/) const;
 
   /// method returning the traction derivates in local coordinates
-  virtual std::vector<std::vector<Real>>
-  computeTractionSpatialDerivativeLocal(const unsigned int /*qp*/) const;
+  virtual RankTwoTensor computeTractionSpatialDerivativeLocal(const unsigned int /*qp*/) const;
 
 protected:
   /// number of history variables present in the model
@@ -87,8 +86,8 @@ protected:
   const std::vector<unsigned int> _non_stateful_mp_sizes;
 
   const std::string _displacement_jump_mp_name;
-  const MaterialProperty<std::vector<Real>> & _displacement_jump;
-  const MaterialProperty<std::vector<Real>> & _displacement_jump_old;
+  const MaterialProperty<RealVectorValue> & _displacement_jump;
+  const MaterialProperty<RealVectorValue> & _displacement_jump_old;
 
   std::vector<std::vector<Real>> ResizeInitialValues() const;
 };

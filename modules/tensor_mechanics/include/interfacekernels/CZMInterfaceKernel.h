@@ -7,24 +7,24 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef DISPLACMENTJUMPBASEDCOHESIVEINTERFACEKERNEL_H
-#define DISPLACMENTJUMPBASEDCOHESIVEINTERFACEKERNEL_H
+#ifndef CZMINTERFACEKERNEL_H
+#define CZMINTERFACEKERNEL_H
 
 #include "InterfaceKernel.h"
 
 /// Forward Declarations
-class czmInterfaceKernel;
+class CZMInterfaceKernel;
 
 template <>
-InputParameters validParams<czmInterfaceKernel>();
+InputParameters validParams<CZMInterfaceKernel>();
 
 /// DG kernel implementing CZM for a 3D traction sepration law based on
 /// the displacement jump. This kernel operates only on a single displacement
 /// compenent. One kernel is needed for each dispalcement jump component
-class czmInterfaceKernel : public InterfaceKernel
+class CZMInterfaceKernel : public InterfaceKernel
 {
 public:
-  czmInterfaceKernel(const InputParameters & parameters);
+  CZMInterfaceKernel(const InputParameters & parameters);
 
 protected:
   virtual Real computeQpResidual(Moose::DGResidualType type);
@@ -53,8 +53,8 @@ protected:
   const std::string _jacobian;
 
   // values of the residual's and jacobian's cofficients
-  const MaterialProperty<std::vector<Real>> & _ResidualMP;
+  const MaterialProperty<RealVectorValue> & _ResidualMP;
   const MaterialProperty<std::vector<std::vector<Real>>> & _JacobianMP;
 };
 
-#endif // DISPLACMENTJUMPBASEDCOHESIVEINTERFACEKERNEL_H
+#endif // CZMINTERFACEKERNEL_H

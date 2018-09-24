@@ -172,7 +172,7 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_2
-    function = 0.02*t
+    function = 1*t
   [../]
   [./top3_x]
     type = DirichletBC
@@ -190,12 +190,12 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_3
-    function = 0.02*t
+    function = 1*t
   [../]
 []
 [InterfaceKernels]
   [./interface_x]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_x
     neighbor_var = disp_x
     disp_1 = disp_y
@@ -206,7 +206,7 @@
     boundary = 'interface'
   [../]
   [./interface_y]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_y
     neighbor_var = disp_y
     disp_1 = disp_x
@@ -217,7 +217,7 @@
     boundary = 'interface'
   [../]
   [./interface_z]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_z
     neighbor_var = disp_z
     disp_1 = disp_x
@@ -238,12 +238,9 @@
     execute_on = 'initial NONLINEAR LINEAR timestep_end'
   [../]
   [./cohesive_law_exponential]
-    type = CohesiveLaw_Exponential
-    # stateful_mp_names = 'max_effective_jump max_effective_traction'
-    # stateful_mp_sizes ='1 1'
-    # stateful_mp_initial_values ='0 0'
-    displacement_jump_peak = 0.01
-    traction_peak = 150
+    type = CZMLaw3DC
+    MaxAllowableTraction = '100 70'
+    DeltaU0 = '1 0.7'
     displacement_jump_mp_name = 'displacement_jump_local'
     boundary = 'interface'
   [../]
@@ -296,7 +293,7 @@
   end_time = 5
   dtmin = 0.2
   line_search = none
-  num_steps = 1
+  # num_steps = 1
 []
 [Outputs]
   [./out]
@@ -337,6 +334,12 @@
   [./sxy_3G]
     type = ElementAverageValue
     variable = sxy
+    execute_on = 'initial timestep_end'
+    block = 3
+  [../]
+  [./disp_3Z]
+    type = ElementAverageValue
+    variable = disp_z
     execute_on = 'initial timestep_end'
     block = 3
   [../]

@@ -141,8 +141,8 @@
 [Functions]
   [./loadUnloadFunction]
     type = PiecewiseLinear
-    x = '0 4    10 16     20      31    40   65  70 120'
-    y = '0 0.08  0  0.12  -0.02   0.2   0   0.5   0   1'
+    x = '0 4     8 14     21      32    42   67   92 142'
+    y = '0 0.08  0  0.12  -0.02   0.2   0    0.5   0   1'
     # x = '0 1    2 '
     # y = '0 -0.2 0 '
   [../]
@@ -206,7 +206,7 @@
 []
 [InterfaceKernels]
   [./interface_x]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_x
     neighbor_var = disp_x
     disp_1 = disp_y
@@ -217,7 +217,7 @@
     boundary = 'interface'
   [../]
   [./interface_y]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_y
     neighbor_var = disp_y
     disp_1 = disp_x
@@ -228,7 +228,7 @@
     boundary = 'interface'
   [../]
   [./interface_z]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_z
     neighbor_var = disp_z
     disp_1 = disp_x
@@ -241,7 +241,7 @@
 []
 [UserObjects]
   [./displacement_jump_uo]
-    type = DispJumpUO_QP
+    type = DispJumpAndNormalsUO_QP
     disp_x = disp_x
     disp_y = disp_y
     disp_z = disp_z
@@ -249,14 +249,14 @@
     execute_on = 'initial LINEAR timestep_end'
   [../]
   [./cohesive_law_exponential]
-    type = CohesiveLaw_Exponential
+    type = CZMLawExponential
     displacement_jump_peak = 0.1
     traction_peak = 150
     displacement_jump_mp_name = 'displacement_jump_local'
     boundary = 'interface'
   [../]
   [./cohesive_law_unload_linear]
-    type = czmUnloadLinear
+    type = CZMUnloadLinear
     displacement_jump_mp_name = 'displacement_jump_local'
     boundary = 'interface'
   [../]
@@ -285,6 +285,11 @@
     displacement_jump_UO = 'displacement_jump_uo'
     traction_separation_UO = 'cohesive_law_exponential'
     unload_traction_separation_UO  = 'cohesive_law_unload_linear'
+    # coopenetration_penalty = 1e4
+  [../]
+  [./Normals_Mat]
+    type = CZMNormals
+    block = '1 2 3'
   [../]
 []
  [Preconditioning]
@@ -307,7 +312,7 @@
   l_max_its = 50
   start_time = 0.0
   dt = 1
-  end_time = 120
+  end_time = 142
   dtmin = 1
   line_search = none
 []

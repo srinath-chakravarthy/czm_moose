@@ -52,9 +52,9 @@ CZMTractionSeparationUOBase::CZMTractionSeparationUOBase(const InputParameters &
     _n_non_stateful_mp(getParam<unsigned int>("n_non_stateful_mp")),
     _non_stateful_mp_names(getParam<std::vector<std::string>>("non_stateful_mp_names")),
     _non_stateful_mp_sizes(getParam<std::vector<unsigned int>>("non_stateful_mp_sizes")),
-    _displacement_jump(getMaterialPropertyByName<std::vector<Real>>(
+    _displacement_jump(getMaterialPropertyByName<RealVectorValue>(
         getParam<std::string>("displacement_jump_mp_name"))),
-    _displacement_jump_old(getMaterialPropertyOldByName<std::vector<Real>>(
+    _displacement_jump_old(getMaterialPropertyOldByName<RealVectorValue>(
         getParam<std::string>("displacement_jump_mp_name")))
 
 {
@@ -156,14 +156,14 @@ CZMTractionSeparationUOBase::checkLoadUnload(const unsigned int /*qp*/) const
              "be called directly but always subclassed");
 }
 
-std::vector<Real>
+RealVectorValue
 CZMTractionSeparationUOBase::computeTractionLocal(unsigned int /*qp*/) const
 {
   mooseError("CZMTractionSeparationUOBase::computeTractionLocal should never "
              "be called directly but always subclassed");
 }
 
-std::vector<std::vector<Real>>
+RankTwoTensor
 CZMTractionSeparationUOBase::computeTractionSpatialDerivativeLocal(unsigned int /*qp*/) const
 {
   mooseError("CZMTractionSeparationUOBase::computeTractionLocal should never "

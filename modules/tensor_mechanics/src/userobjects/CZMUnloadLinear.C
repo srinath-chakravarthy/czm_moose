@@ -7,14 +7,14 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "czmUnloadLinear.h"
+#include "CZMUnloadLinear.h"
 #include "Material.h"
 #include "MooseError.h"
 
-registerMooseObject("TensorMechanicsApp", czmUnloadLinear);
+registerMooseObject("TensorMechanicsApp", CZMUnloadLinear);
 template <>
 InputParameters
-validParams<czmUnloadLinear>()
+validParams<CZMUnloadLinear>()
 {
   InputParameters params = validParams<CZMTractionSeparationUOBase>();
   params.addParam<unsigned int>("n_stateful_mp", 0, "number of stateful material properties");
@@ -37,7 +37,7 @@ validParams<czmUnloadLinear>()
   return params;
 }
 
-czmUnloadLinear::czmUnloadLinear(const InputParameters & parameters)
+CZMUnloadLinear::CZMUnloadLinear(const InputParameters & parameters)
   : CZMTractionSeparationUOBase(parameters),
     _max_effective_jump(getMaterialPropertyOldByName<std::vector<Real>>(
         getParam<std::string>("max_effective_jump_mp_name"))),
@@ -51,36 +51,40 @@ czmUnloadLinear::czmUnloadLinear(const InputParameters & parameters)
 {
 }
 
-std::vector<Real>
-czmUnloadLinear::computeTractionLocal(unsigned int qp) const
+RealVectorValue
+CZMUnloadLinear::computeTractionLocal(unsigned int qp) const
 {
-  std::vector<Real> TractionLocal(3, 0);
+  RealVectorValue TractionLocal;
 
   Real T = 0;
   if (_max_effective_jump[qp][0] > 0)
   {
     T = _max_effective_traction[qp][0] / _max_effective_jump[qp][0];
     for (unsigned int i = 0; i < 3; i++)
-      TractionLocal[i] = T * _weighted_displacement_jump[qp][i];
+      TractionLocal(i) = T * _weighted_displacement_jump[qp][i];
   }
   else
-    mooseError("czmUnloadLinear:: should not be called if call _max_effective_jump ==0 ");
+    mooseError("CZMUnloadLinear:: should not be called if call _max_effective_jump ==0 ");
   return TractionLocal;
 }
 
-std::vector<std::vector<Real>>
-czmUnloadLinear::computeTractionSpatialDerivativeLocal(unsigned int qp) const
+RankTwoTensor
+CZMUnloadLinear::computeTractionSpatialDerivativeLocal(unsigned int qp) const
 {
-  std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
+  RankTwoTensor TractionDerivativeLocal;
 
   if (_max_effective_jump[qp][0] > 0)
   {
     Real T = _max_effective_traction[qp][0] / _max_effective_jump[qp][0];
     for (unsigned int i = 0; i < 3; i++)
-      TractionDerivativeLocal[i][i] = T * _displacement_jump_weights[qp][i];
+      for (unsigned int j = 0; j < 3; j++)
+        if (i == j)
+          TractionDerivativeLocal(i, j) = T * _displacement_jump_weights[qp][i];
+        else
+          TractionDerivativeLocal(i, j) = 0;
   }
   else
-    mooseError("czmUnloadLinear:: should not be called if call _max_effective_jump ==0 ");
+    mooseError("CZMUnloadLinear:: should not be called if call _max_effective_jump ==0 ");
 
   return TractionDerivativeLocal;
 }

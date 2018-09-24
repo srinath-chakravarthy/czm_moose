@@ -7,13 +7,13 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "czmInterfaceKernel.h"
+#include "CZMInterfaceKernel.h"
 
-registerMooseObject("TensorMechanicsApp", czmInterfaceKernel);
+registerMooseObject("TensorMechanicsApp", CZMInterfaceKernel);
 
 template <>
 InputParameters
-validParams<czmInterfaceKernel>()
+validParams<CZMInterfaceKernel>()
 {
   InputParameters params = validParams<InterfaceKernel>();
   params.addRequiredParam<unsigned int>("disp_index",
@@ -60,7 +60,7 @@ validParams<czmInterfaceKernel>()
   return params;
 }
 
-czmInterfaceKernel::czmInterfaceKernel(const InputParameters & parameters)
+CZMInterfaceKernel::CZMInterfaceKernel(const InputParameters & parameters)
   : InterfaceKernel(parameters),
     _disp_index(getParam<unsigned int>("disp_index")),
     _disp_1(_mesh.dimension() >= 2 ? coupledValue("disp_1") : _zero),
@@ -75,22 +75,22 @@ czmInterfaceKernel::czmInterfaceKernel(const InputParameters & parameters)
     // the residual and jacobain of the traction sepration law wrt the displacement jump.
     _residual(getParam<std::string>("residual")),
     _jacobian(getParam<std::string>("jacobian")),
-    _ResidualMP(getMaterialProperty<std::vector<Real>>(_residual)),
+    _ResidualMP(getMaterialProperty<RealVectorValue>(_residual)),
     _JacobianMP(getMaterialProperty<std::vector<std::vector<Real>>>(_jacobian))
 
 {
   if (!parameters.isParamValid("boundary"))
   {
-    mooseError("In order to use  czmInterfaceKernel ,"
+    mooseError("In order to use  CZMInterfaceKernel ,"
                " you must specify a boundary where it will live.");
   }
 }
 
 Real
-czmInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
+CZMInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
 {
 
-  Real r = _ResidualMP[_qp][_disp_index];
+  Real r = _ResidualMP[_qp](_disp_index);
 
   switch (type)
   {
@@ -109,7 +109,7 @@ czmInterfaceKernel::computeQpResidual(Moose::DGResidualType type)
 }
 
 Real
-czmInterfaceKernel::computeQpJacobian(Moose::DGJacobianType type)
+CZMInterfaceKernel::computeQpJacobian(Moose::DGJacobianType type)
 {
   // retrieve the diagonal jacobain coefficient dependning on the disaplcement
   // component (_disp_index) this kernel is working on
@@ -141,7 +141,7 @@ czmInterfaceKernel::computeQpJacobian(Moose::DGJacobianType type)
 }
 
 Real
-czmInterfaceKernel::computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigned int jvar)
+CZMInterfaceKernel::computeQpOffDiagJacobian(Moose::DGJacobianType type, unsigned int jvar)
 {
 
   if (jvar != _disp_1_var && jvar != _disp_2_var && jvar != _disp_1_neighbor_var &&

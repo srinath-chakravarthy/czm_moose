@@ -11,7 +11,7 @@
 #define CZMUOBASEDMATERIAL_H
 
 #include "Material.h"
-#include "DispJumpUO_QP.h"
+#include "DispJumpAndNormalsUO_QP.h"
 #include "CZMTractionSeparationUOBase.h"
 class CZMUOBasedMaterial;
 template <>
@@ -29,7 +29,7 @@ protected:
   virtual void initQpStatefulProperties() override;
 
   /// User objects computing the displacement jump
-  const DispJumpUO_QP & _displacement_jump_UO;
+  const DispJumpAndNormalsUO_QP & _displacement_jump_UO;
 
   /// User objectets defining the traction separation law
   /// non linear TS law
@@ -39,31 +39,33 @@ protected:
   /// penalty for copentration behavior
   const CZMTractionSeparationUOBase & _coopenetration_penalty_UO;
 
+  const Real _coopenetration_penalty;
+
   /// penalty for copentration behavior
   const CZMTractionSeparationUOBase * _selected_CZM_UO;
 
   /// the disaplcement jump in global coordiantes
-  MaterialProperty<std::vector<Real>> & _displacement_jump;
+  MaterialProperty<RealVectorValue> & _displacement_jump;
 
   /// the disaplcement jump in natural element coordiantes
-  MaterialProperty<std::vector<Real>> & _displacement_jump_local;
+  MaterialProperty<RealVectorValue> & _displacement_jump_local;
   /// the disaplcement jump in natural element coordiantes at the previous time step
-  const MaterialProperty<std::vector<Real>> & _displacement_jump_local_old;
+  const MaterialProperty<RealVectorValue> & _displacement_jump_local_old;
 
   /// the value of the Traction in global coordiantes
-  MaterialProperty<std::vector<Real>> & _traction;
+  MaterialProperty<RealVectorValue> & _traction;
 
   /// the value of the Traction in natural element coordiantes
-  MaterialProperty<std::vector<Real>> & _traction_local;
+  MaterialProperty<RealVectorValue> & _traction_local;
 
   /// the value of the traction derivatives in global coordiantes
-  MaterialProperty<std::vector<std::vector<Real>>> & _traction_spatial_derivatives;
+  MaterialProperty<RankTwoTensor> & _traction_spatial_derivatives;
 
   /// the value of the traction derivatives in natural element coordiantes
-  MaterialProperty<std::vector<std::vector<Real>>> & _traction_spatial_derivatives_local;
+  MaterialProperty<RankTwoTensor> & _traction_spatial_derivatives_local;
 
   /// the material property in which the residual is stored
-  MaterialProperty<std::vector<Real>> & _czm_residual;
+  MaterialProperty<RealVectorValue> & _czm_residual;
 
   /// the material property in which the jacobian is stored
   MaterialProperty<std::vector<std::vector<Real>>> & _czm_jacobian;
@@ -81,15 +83,14 @@ protected:
 
   /// Rotate a vector "T" via the rotation matrix "R".
   /// inverse rotation is achieved by setting "inverse" = true
-  std::vector<Real> rotateVector(const std::vector<Real> /*V*/,
-                                 const RealTensorValue /*R*/,
-                                 const bool inverse = false);
+  RealVectorValue rotateVector(const RealVectorValue /*V*/,
+                               const RealTensorValue /*R*/,
+                               const bool inverse = false);
 
   /// Rotate a rank2 tensor "T" via the rotation matrix "R".
   /// inverse rotation is achieved by setting "inverse" = true
-  std::vector<std::vector<Real>> rotateTensor2(const std::vector<std::vector<Real>> /*T*/,
-                                               const RealTensorValue /*R*/,
-                                               const bool inverse = false);
+  RankTwoTensor
+  rotateTensor2(const RankTwoTensor /*T*/, const RealTensorValue /*R*/, const bool inverse = false);
 };
 
 #endif // CZMUOBASEDMATERIAL_H

@@ -7,27 +7,26 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef COHESIVELAW_EXPONENTIAL_H
-#define COHESIVELAW_EXPONENTIAL_H
+#ifndef CZMLAWEXPONENTIAL_H
+#define CZMLAWEXPONENTIAL_H
 
 #include "CZMTractionSeparationUOBase.h"
 
-class CohesiveLaw_Exponential;
+class CZMLawExponential;
 
 template <>
-InputParameters validParams<CohesiveLaw_Exponential>();
+InputParameters validParams<CZMLawExponential>();
 
 /**
 Traction sepration law basic user object
  */
-class CohesiveLaw_Exponential : public CZMTractionSeparationUOBase
+class CZMLawExponential : public CZMTractionSeparationUOBase
 {
 public:
-  CohesiveLaw_Exponential(const InputParameters & parameters);
+  CZMLawExponential(const InputParameters & parameters);
 
-  std::vector<Real> computeTractionLocal(unsigned int qp) const override;
-  std::vector<std::vector<Real>>
-  computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
+  RealVectorValue computeTractionLocal(unsigned int qp) const override;
+  RankTwoTensor computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
 
   std::vector<Real> getNewStatefulMaterialProperty(unsigned int qp,
                                                    unsigned int mp_index) const override;
@@ -61,4 +60,4 @@ protected:
   // const;
 };
 
-#endif // COHESIVELAW_EXPONENTIAL_H
+#endif // CZMLAWEXPONENTIAL_H

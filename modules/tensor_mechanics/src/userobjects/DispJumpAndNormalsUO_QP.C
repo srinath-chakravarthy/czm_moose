@@ -7,13 +7,13 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "DispJumpUO_QP.h"
+#include "DispJumpAndNormalsUO_QP.h"
 #include "MooseMesh.h"
-registerMooseObject("TensorMechanicsApp", DispJumpUO_QP);
+registerMooseObject("TensorMechanicsApp", DispJumpAndNormalsUO_QP);
 
 template <>
 InputParameters
-validParams<DispJumpUO_QP>()
+validParams<DispJumpAndNormalsUO_QP>()
 {
   InputParameters params = validParams<InterfaceUserObject>();
   // params.addParam<MaterialPropertyName>("diffusivity",
@@ -31,21 +31,23 @@ validParams<DispJumpUO_QP>()
   return params;
 }
 
-DispJumpUO_QP::DispJumpUO_QP(const InputParameters & parameters)
+DispJumpAndNormalsUO_QP::DispJumpAndNormalsUO_QP(const InputParameters & parameters)
   : InterfaceUserObject(parameters),
     _ux(coupledValue("disp_x")),
     _ux_neighbor(coupledNeighborValue("disp_x")),
     _uy(_mesh.dimension() >= 2 ? coupledValue("disp_y") : _zero),
     _uy_neighbor(_mesh.dimension() >= 2 ? coupledNeighborValue("disp_y") : _zero),
     _uz(_mesh.dimension() >= 3 ? coupledValue("disp_z") : _zero),
-    _uz_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z") : _zero)
+    _uz_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z") : _zero),
+    _normals_MP(getMaterialProperty<RealVectorValue>("normals_MP")),
+    _normals_MP_neighbor(getNeighborMaterialProperty<RealVectorValue>("normals_MP"))
 {
 }
 
-DispJumpUO_QP::~DispJumpUO_QP() {}
+DispJumpAndNormalsUO_QP::~DispJumpAndNormalsUO_QP() {}
 
 void
-DispJumpUO_QP::initialize()
+DispJumpAndNormalsUO_QP::initialize()
 {
 
   // define the boundary map nad retrieve element side and boundary_ID
@@ -70,7 +72,7 @@ DispJumpUO_QP::initialize()
       std::pair<dof_id_type, unsigned int> elem_side_pair =
           std::make_pair(std::get<0>(elem_side_bid[i]), std::get<1>(elem_side_bid[i]));
       // initialize map elemenet
-      std::vector<RealVectorValue> var_values(0);
+      std::vector<std::vector<RealVectorValue>> var_values(0, std::vector<RealVectorValue>(3));
 
       // add entry to the value map
       _map_values[elem_side_pair] = var_values;
@@ -79,7 +81,7 @@ DispJumpUO_QP::initialize()
 }
 
 void
-DispJumpUO_QP::execute()
+DispJumpAndNormalsUO_QP::execute()
 {
 
   // find the entry on the map
@@ -94,26 +96,55 @@ DispJumpUO_QP::execute()
     // loop over qps and do stuff
     for (unsigned int qp = 0; qp < _qrule->n_points(); ++qp)
     {
-      // vec[qp].resize(3, 0);
+      vec[qp].resize(3);
+      // compute displacement jump
+      vec[qp][0](0) = _ux_neighbor[qp] - _ux[qp];
+      vec[qp][0](1) = _uy_neighbor[qp] - _uy[qp];
+      vec[qp][0](2) = _uz_neighbor[qp] - _uz[qp];
 
       // compute displacement jump
-      vec[qp](0) = _ux_neighbor[qp] - _ux[qp];
-      vec[qp](1) = _uy_neighbor[qp] - _uy[qp];
-      vec[qp](2) = _uz_neighbor[qp] - _uz[qp];
+      vec[qp][1] = _normals_MP[qp];
+      vec[qp][2] = _normals_MP_neighbor[qp];
     }
   }
   else
-    mooseError("DispJumpUO_QP::execute cannot fine the required element and side");
+    mooseError("DispJumpAndNormalsUO_QP::execute cannot fine the required element and side");
 }
 
 RealVectorValue
-DispJumpUO_QP::getDisplacementJump(dof_id_type elem, unsigned int side, unsigned int qp) const
+DispJumpAndNormalsUO_QP::getDisplacementJump(dof_id_type elem,
+                                             unsigned int side,
+                                             unsigned int qp) const
 {
   auto dispJump = _map_values.find(std::make_pair(elem, side));
   if (dispJump != _map_values.end())
   {
-    return dispJump->second[qp];
+    return dispJump->second[qp][0];
   }
   else
-    mooseError("DispJumpUO_QP::getDisplacementJump can't find the given qp");
+    mooseError("DispJumpAndNormalsUO_QP::getDisplacementJump can't find the given qp");
+}
+
+RealVectorValue
+DispJumpAndNormalsUO_QP::getNormalMaster(dof_id_type elem, unsigned int side, unsigned int qp) const
+{
+  auto dispJump = _map_values.find(std::make_pair(elem, side));
+  if (dispJump != _map_values.end())
+  {
+    return dispJump->second[qp][1];
+  }
+  else
+    mooseError("DispJumpAndNormalsUO_QP::getDisplacementJump can't find the given qp");
+}
+
+RealVectorValue
+DispJumpAndNormalsUO_QP::getNormalSlave(dof_id_type elem, unsigned int side, unsigned int qp) const
+{
+  auto dispJump = _map_values.find(std::make_pair(elem, side));
+  if (dispJump != _map_values.end())
+  {
+    return dispJump->second[qp][2];
+  }
+  else
+    mooseError("DispJumpAndNormalsUO_QP::getDisplacementJump can't find the given qp");
 }

@@ -7,27 +7,26 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#ifndef COHESIVELAW_3DC_H
-#define COHESIVELAW_3DC_H
+#ifndef CZMLAW3DC_H
+#define CZMLAW3DC_H
 
 #include "CZMTractionSeparationUOBase.h"
 
-class CohesiveLaw_3DC;
+class CZMLaw3DC;
 
 template <>
-InputParameters validParams<CohesiveLaw_3DC>();
+InputParameters validParams<CZMLaw3DC>();
 
 /**
 Traction sepration law basic user object
  */
-class CohesiveLaw_3DC : public CZMTractionSeparationUOBase
+class CZMLaw3DC : public CZMTractionSeparationUOBase
 {
 public:
-  CohesiveLaw_3DC(const InputParameters & parameters);
+  CZMLaw3DC(const InputParameters & parameters);
 
-  std::vector<Real> computeTractionLocal(unsigned int qp) const override;
-  std::vector<std::vector<Real>>
-  computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
+  RealVectorValue computeTractionLocal(unsigned int qp) const override;
+  RankTwoTensor computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
 
 protected:
   // cohesive law parameters
@@ -35,4 +34,4 @@ protected:
   const std::vector<Real> _maxAllowableTraction;
 };
 
-#endif // COHESIVELAW_3DC_H
+#endif // CZMLAW3DC_H

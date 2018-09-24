@@ -12,22 +12,21 @@
 
 #include "CZMTractionSeparationUOBase.h"
 
-class czmUnloadLinear;
+class CZMUnloadLinear;
 
 template <>
-InputParameters validParams<czmUnloadLinear>();
+InputParameters validParams<CZMUnloadLinear>();
 
 /**
 Traction sepration law basic user object
  */
-class czmUnloadLinear : public CZMTractionSeparationUOBase
+class CZMUnloadLinear : public CZMTractionSeparationUOBase
 {
 public:
-  czmUnloadLinear(const InputParameters & parameters);
+  CZMUnloadLinear(const InputParameters & parameters);
 
-  std::vector<Real> computeTractionLocal(unsigned int qp) const override;
-  std::vector<std::vector<Real>>
-  computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
+  RealVectorValue computeTractionLocal(unsigned int qp) const override;
+  RankTwoTensor computeTractionSpatialDerivativeLocal(unsigned int qp) const override;
 
   // std::vector<Real> getNewStatefulMaterialProperty(unsigned int qp,
   //                                                  unsigned int mp_index) const override;

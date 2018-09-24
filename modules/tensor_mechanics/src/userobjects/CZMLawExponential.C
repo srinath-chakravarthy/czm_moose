@@ -7,14 +7,14 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "CohesiveLaw_Exponential.h"
+#include "CZMLawExponential.h"
 #include "Material.h"
 #include "MooseError.h"
 
-registerMooseObject("TensorMechanicsApp", CohesiveLaw_Exponential);
+registerMooseObject("TensorMechanicsApp", CZMLawExponential);
 template <>
 InputParameters
-validParams<CohesiveLaw_Exponential>()
+validParams<CZMLawExponential>()
 {
   InputParameters params = validParams<CZMTractionSeparationUOBase>();
   params.addClassDescription("Simple Exponential cohseive law model, with damage");
@@ -39,9 +39,6 @@ validParams<CohesiveLaw_Exponential>()
   params.addParam<std::vector<unsigned int>>("non_stateful_mp_sizes",
                                              std::vector<unsigned int>{3, 1, 3},
                                              "size of each stateful material properties");
-  params.addRequiredParam<Real>(
-      "displacement_jump_peak",
-      "the value of effective displacement jump at wich peak traction occurs");
 
   params.addRequiredParam<Real>(
       "displacement_jump_peak",
@@ -51,7 +48,7 @@ validParams<CohesiveLaw_Exponential>()
   return params;
 }
 
-CohesiveLaw_Exponential::CohesiveLaw_Exponential(const InputParameters & parameters)
+CZMLawExponential::CZMLawExponential(const InputParameters & parameters)
   : CZMTractionSeparationUOBase(parameters),
     _displacement_jump_peak(getParam<Real>("displacement_jump_peak")),
     _traction_peak(getParam<Real>("traction_peak")),
@@ -69,18 +66,18 @@ CohesiveLaw_Exponential::CohesiveLaw_Exponential(const InputParameters & paramet
 
 ///
 unsigned int
-CohesiveLaw_Exponential::checkLoadUnload(const unsigned int qp) const
+CZMLawExponential::checkLoadUnload(const unsigned int qp) const
 {
   // first step _max_effective_jump_old ==0
   if (_max_effective_jump_old[qp][0] == 0)
   {
-    if (_displacement_jump[qp][0] >= 0)
+    if (_displacement_jump[qp](0) >= 0)
       return 0;
     else
       return 2;
   }
   // no copenatration
-  if (_displacement_jump[qp][0] >= 0)
+  if (_displacement_jump[qp](0) >= 0)
   {
     // loading
     if (_effective_jump[qp][0] >= _effective_jump_old[qp][0])
@@ -99,27 +96,27 @@ CohesiveLaw_Exponential::checkLoadUnload(const unsigned int qp) const
     return 2;
 }
 
-std::vector<Real>
-CohesiveLaw_Exponential::computeTractionLocal(unsigned int qp) const
+RealVectorValue
+CZMLawExponential::computeTractionLocal(unsigned int qp) const
 {
-  std::vector<Real> TractionLocal(3, 0);
+  RealVectorValue TractionLocal;
 
   for (unsigned int i = 0; i < 3; i++)
-    TractionLocal[i] = _effective_traction[qp][0] * _weighted_displacement_jump[qp][i];
+    TractionLocal(i) = _effective_traction[qp][0] * _weighted_displacement_jump[qp][i];
 
   return TractionLocal;
 }
 
-std::vector<std::vector<Real>>
-CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) const
+RankTwoTensor
+CZMLawExponential::computeTractionSpatialDerivativeLocal(unsigned int qp) const
 {
 
-  std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
+  RankTwoTensor TractionDerivativeLocal;
   Real T_eff = _effective_traction[qp][0];
   Real D_eff = _effective_jump[qp][0];
   Real beta2 = std::pow(_beta, 2);
 
-  if (D_eff > 0) // TODO NEED TO FIX DERIVATIVES AT 0!!!!!
+  if (D_eff > 0)
   {
     Real D_eff_D_p = D_eff * _displacement_jump_peak;
 
@@ -137,28 +134,36 @@ CohesiveLaw_Exponential::computeTractionSpatialDerivativeLocal(unsigned int qp) 
         Real offdiag_term =
             _weighted_displacement_jump[qp][i] * _weighted_displacement_jump[qp][j] / D_eff_D_p;
 
-        TractionDerivativeLocal[i][j] = T_eff * (diag_term - offdiag_term);
+        TractionDerivativeLocal(i, j) = T_eff * (diag_term - offdiag_term);
       }
   }
   else if (D_eff == 0)
   {
     for (unsigned int i = 0; i < 3; i++)
-    {
-      TractionDerivativeLocal[i][i] = T_eff;
-      if (i > 0)
-        TractionDerivativeLocal[i][i] *= beta2;
-    }
+      for (unsigned int j = 0; j < 3; j++)
+      {
+        if (i == j)
+        {
+          TractionDerivativeLocal(i, j) = T_eff;
+          if (i > 0)
+            TractionDerivativeLocal(i, j) *= beta2;
+        }
+        else
+        {
+          TractionDerivativeLocal(i, j) = 0;
+        }
+      }
   }
   return TractionDerivativeLocal;
 }
 
 Real
-CohesiveLaw_Exponential::getEffectiveJump(unsigned int qp) const
+CZMLawExponential::getEffectiveJump(unsigned int qp) const
 {
   Real effective_jump = 0;
   for (unsigned int i = 0; i < 3; i++)
   {
-    Real temp = _displacement_jump[qp][i] * _displacement_jump[qp][i];
+    Real temp = _displacement_jump[qp](i) * _displacement_jump[qp](i);
     if (i > 0)
       temp *= _beta * _beta;
     effective_jump += temp;
@@ -167,7 +172,7 @@ CohesiveLaw_Exponential::getEffectiveJump(unsigned int qp) const
 }
 
 Real
-CohesiveLaw_Exponential::getEffectiveTraction(unsigned int qp) const
+CZMLawExponential::getEffectiveTraction(unsigned int qp) const
 {
   /// T_eff =e*Tp/Dp*exp(-D_eff/D_p)
   Real effective_traction_nl = 0;
@@ -181,28 +186,15 @@ CohesiveLaw_Exponential::getEffectiveTraction(unsigned int qp) const
   return effective_traction_nl;
 }
 
-// Real
-// CohesiveLaw_Exponential::getEffectiveTractionLinear(unsigned int qp) const
-// {
-//   Real effective_traction_l = 0;
-//   Real current_effective_jump = getEffectiveJump(qp);
-//   if (current_effective_jump != 0)
-//   {
-//     effective_traction_l = _max_effective_traction_old[qp][0] * current_effective_jump;
-//   }
-//   return effective_traction_l;
-// }
-
 std::vector<Real>
-CohesiveLaw_Exponential::getNewNonStatefulMaterialProperty(unsigned int qp,
-                                                           unsigned int mp_index) const
+CZMLawExponential::getNewNonStatefulMaterialProperty(unsigned int qp, unsigned int mp_index) const
 {
   std::vector<Real> temp(getNonStatefulMaterialPropertySize(mp_index), 0);
   if (mp_index == 0) /*WEIGHTED DISPLACEMENT JUMP*/
   {
     for (unsigned int i = 0; i < 3; i++)
     {
-      temp[i] = _displacement_jump[qp][i];
+      temp[i] = _displacement_jump[qp](i);
       if (i > 0)
         temp[i] *= _beta * _beta;
     }
@@ -221,8 +213,7 @@ CohesiveLaw_Exponential::getNewNonStatefulMaterialProperty(unsigned int qp,
 }
 
 std::vector<Real>
-CohesiveLaw_Exponential::getNewStatefulMaterialProperty(unsigned int qp,
-                                                        unsigned int mp_index) const
+CZMLawExponential::getNewStatefulMaterialProperty(unsigned int qp, unsigned int mp_index) const
 {
   std::vector<Real> temp(getStatefulMaterialPropertySize(mp_index), 0);
   if (mp_index == 0) /*EFFECTIVE JUMP*/
@@ -230,13 +221,13 @@ CohesiveLaw_Exponential::getNewStatefulMaterialProperty(unsigned int qp,
   else if (mp_index == 1) /*MAX EFFECTIVE JUMP*/
   {
     temp[0] = _max_effective_jump_old[qp][0];
-    if (_effective_jump[qp][0] > _max_effective_jump_old[qp][0] && _displacement_jump[qp][0] > 0)
+    if (_effective_jump[qp][0] > _max_effective_jump_old[qp][0] && _displacement_jump[qp](0) > 0)
       temp[0] = _effective_jump[qp][0]; // new maximum effective jump
   }
   else if (mp_index == 2) /*MAX EFFECTIVE TRACTION*/
   {
     temp[0] = _max_effective_traction_old[qp][0];
-    if (_effective_jump[qp][0] > _max_effective_jump_old[qp][0] && _displacement_jump[qp][0] > 0)
+    if (_effective_jump[qp][0] > _max_effective_jump_old[qp][0] && _displacement_jump[qp](0) > 0)
       temp[0] = getEffectiveTraction(qp) * _effective_jump[qp][0];
   }
 

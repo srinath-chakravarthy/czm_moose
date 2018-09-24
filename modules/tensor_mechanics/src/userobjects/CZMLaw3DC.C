@@ -7,14 +7,14 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "CohesiveLaw_3DC.h"
+#include "CZMLaw3DC.h"
 #include "Material.h"
 #include "MooseError.h"
 
-registerMooseObject("TensorMechanicsApp", CohesiveLaw_3DC);
+registerMooseObject("TensorMechanicsApp", CZMLaw3DC);
 template <>
 InputParameters
-validParams<CohesiveLaw_3DC>()
+validParams<CZMLaw3DC>()
 {
   InputParameters params = validParams<CZMTractionSeparationUOBase>();
   params.addClassDescription("3DC cohseive law model, no damage");
@@ -26,11 +26,15 @@ validParams<CohesiveLaw_3DC>()
   params.addRequiredParam<std::vector<Real>>("MaxAllowableTraction",
                                              "a vector containing the maximum allowed traction"
                                              "for the normal(1st) and tangential(2nd) direction.");
+  params.addClassDescription("Simple Exponential cohseive law model, with damage");
+  params.addParam<unsigned int>("n_stateful_mp", 0, "number of stateful material properties");
+  params.addParam<unsigned int>(
+      "n_non_stateful_mp", 0, "number of NON-stateful material properties");
 
   return params;
 }
 
-CohesiveLaw_3DC::CohesiveLaw_3DC(const InputParameters & parameters)
+CZMLaw3DC::CZMLaw3DC(const InputParameters & parameters)
   : CZMTractionSeparationUOBase(parameters),
     _deltaU0(getParam<std::vector<Real>>("DeltaU0")),
     _maxAllowableTraction(getParam<std::vector<Real>>("MaxAllowableTraction"))
@@ -38,10 +42,10 @@ CohesiveLaw_3DC::CohesiveLaw_3DC(const InputParameters & parameters)
 {
   // check inputs
   if (_deltaU0.size() != 2)
-    mooseError("CohesiveLaw_3DC: the parameter DeltaU0 requires 2 components, " +
+    mooseError("CZMLaw3DC: the parameter DeltaU0 requires 2 components, " +
                std::to_string(_deltaU0.size()) + " provided.");
   if (_maxAllowableTraction.size() != 2)
-    mooseError("CohesiveLaw_3DC: the parameter MaxAllowableTraction"
+    mooseError("CZMLaw3DC: the parameter MaxAllowableTraction"
                "requires 2 components," +
                std::to_string(_maxAllowableTraction.size()) + " provided.");
 
@@ -51,18 +55,18 @@ CohesiveLaw_3DC::CohesiveLaw_3DC(const InputParameters & parameters)
   const_cast<std::vector<Real> &>(_maxAllowableTraction).push_back(_maxAllowableTraction[1]);
 }
 
-std::vector<Real>
-CohesiveLaw_3DC::computeTractionLocal(unsigned int qp) const
+RealVectorValue
+CZMLaw3DC::computeTractionLocal(unsigned int qp) const
 {
 
-  std::vector<Real> TractionLocal(3, 0);
+  RealVectorValue TractionLocal;
   // convention N, T, S
   Real temp, X, expX, A_i, B_i;
 
   X = 0;
   for (unsigned int i = 0; i < 3; i++)
   {
-    temp = _displacement_jump[qp][i] / _deltaU0[i];
+    temp = _displacement_jump[qp](i) / _deltaU0[i];
     if (i > 0)
     {
       temp *= temp; // square for shear component
@@ -85,19 +89,19 @@ CohesiveLaw_3DC::computeTractionLocal(unsigned int qp) const
     }
     A_i = _maxAllowableTraction[i] * temp;
 
-    B_i = _displacement_jump[qp][i] / _deltaU0[i];
+    B_i = _displacement_jump[qp](i) / _deltaU0[i];
 
-    TractionLocal[i] = A_i * B_i * expX;
+    TractionLocal(i) = A_i * B_i * expX;
   }
 
   return TractionLocal;
 }
 
-std::vector<std::vector<Real>>
-CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(unsigned int qp) const
+RankTwoTensor
+CZMLaw3DC::computeTractionSpatialDerivativeLocal(unsigned int qp) const
 {
 
-  std::vector<std::vector<Real>> TractionDerivativeLocal(3, std::vector<Real>(3, 0));
+  RankTwoTensor TractionDerivativeLocal;
   // this function compute partial derivates of Tn[0][:], Tt[1][:], Ts[2][:]
   // w.r.t. dun, dut, dus
   // T_i = A_i*B_i*exp(-X) with:
@@ -119,7 +123,7 @@ CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(unsigned int qp) const
   X = 0;
   for (i = 0; i < 3; i++)
   {
-    temp = _displacement_jump[qp][i] / _deltaU0[i];
+    temp = _displacement_jump[qp](i) / _deltaU0[i];
     if (i > 0)
       temp *= temp;
     X += temp;
@@ -145,7 +149,7 @@ CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(unsigned int qp) const
     A_i *= _maxAllowableTraction[i];
 
     // compute B_i
-    B_i = _displacement_jump[qp][i] / _deltaU0[i];
+    B_i = _displacement_jump[qp](i) / _deltaU0[i];
 
     for (j = 0; j < 3; j++)
     {
@@ -161,9 +165,9 @@ CohesiveLaw_3DC::computeTractionSpatialDerivativeLocal(unsigned int qp) const
       if (j == 0) // alpha = 1
         dX_duj = 1. / _deltaU0[j];
       else // alpha = 2
-        dX_duj = 2. * _displacement_jump[qp][j] / (_deltaU0[j] * _deltaU0[j]);
+        dX_duj = 2. * _displacement_jump[qp](j) / (_deltaU0[j] * _deltaU0[j]);
 
-      TractionDerivativeLocal[i][j] =
+      TractionDerivativeLocal(i, j) =
           A_i * expX * (dBi_dui - B_i * dX_duj); // the minus sign is due to exp(-X)
     }
   }
