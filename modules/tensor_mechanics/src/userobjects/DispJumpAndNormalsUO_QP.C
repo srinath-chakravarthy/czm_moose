@@ -40,7 +40,11 @@ DispJumpAndNormalsUO_QP::DispJumpAndNormalsUO_QP(const InputParameters & paramet
     _uz(_mesh.dimension() >= 3 ? coupledValue("disp_z") : _zero),
     _uz_neighbor(_mesh.dimension() >= 3 ? coupledNeighborValue("disp_z") : _zero),
     _normals_MP(getMaterialProperty<RealVectorValue>("normals_MP")),
-    _normals_MP_neighbor(getNeighborMaterialProperty<RealVectorValue>("normals_MP"))
+    _normals_MP_neighbor(getNeighborMaterialProperty<RealVectorValue>("normals_MP")),
+    __elem(getMaterialProperty<unsigned int>("elem")),
+    __elem_neighbor(getNeighborMaterialProperty<unsigned int>("elem")),
+    __qp(getMaterialProperty<unsigned int>("qp")),
+    __qp_neighbor(getNeighborMaterialProperty<unsigned int>("qp"))
 {
 }
 
@@ -105,6 +109,16 @@ DispJumpAndNormalsUO_QP::execute()
       // compute displacement jump
       vec[qp][1] = _normals_MP[qp];
       vec[qp][2] = _normals_MP_neighbor[qp];
+      std::cout << "CURR __elem : " << __elem[qp] << "__qp: " << __qp[qp] << " Normal         : ";
+      for (unsigned int i = 0; i < 3; i++)
+        std::cout << _normals_MP[qp](i) << "  ";
+      std::cout << std::endl;
+
+      std::cout << "NEIG __elem : " << __elem_neighbor[qp] << "__qp: " << __qp_neighbor[qp]
+                << "Normal: ";
+      for (unsigned int i = 0; i < 3; i++)
+        std::cout << _normals_MP_neighbor[qp](i) << "  ";
+      std::cout << std::endl;
     }
   }
   else

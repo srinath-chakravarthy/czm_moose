@@ -70,6 +70,10 @@ protected:
   /// the material property in which the jacobian is stored
   MaterialProperty<std::vector<std::vector<Real>>> & _czm_jacobian;
 
+  MaterialProperty<RealVectorValue> & _normals_MP;
+  MaterialProperty<RealVectorValue> & _normals_neighbor_MP;
+  MaterialProperty<RealVectorValue> & _normals_average;
+
   unsigned int _uo_id;
 
   const unsigned int _n_uo_czm_properties;

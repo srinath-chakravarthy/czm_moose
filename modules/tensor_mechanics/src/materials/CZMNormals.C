@@ -22,7 +22,10 @@ validParams<CZMNormals>()
 }
 
 CZMNormals::CZMNormals(const InputParameters & parameters)
-  : Material(parameters), _normals_MP(declareProperty<RealVectorValue>("normals_MP"))
+  : Material(parameters),
+    _normals_MP(declareProperty<RealVectorValue>("normals_MP")),
+    __elem(declareProperty<unsigned int>("elem")),
+    __qp(declareProperty<unsigned int>("qp"))
 {
 }
 
@@ -30,4 +33,6 @@ void
 CZMNormals::computeQpProperties()
 {
   _normals_MP[_qp] = _normals[_qp];
+  __elem[_qp] = _current_elem->id();
+  __qp[_qp] = _qp;
 }

@@ -49,6 +49,10 @@ protected:
   const VariableValue & _uz_neighbor;
   const MaterialProperty<RealVectorValue> & _normals_MP;
   const MaterialProperty<RealVectorValue> & _normals_MP_neighbor;
+  const MaterialProperty<unsigned int> & __elem;
+  const MaterialProperty<unsigned int> & __elem_neighbor;
+  const MaterialProperty<unsigned int> & __qp;
+  const MaterialProperty<unsigned int> & __qp_neighbor;
 };
 
 #endif // DISPJUMPANDNORMALSUO_QP_H

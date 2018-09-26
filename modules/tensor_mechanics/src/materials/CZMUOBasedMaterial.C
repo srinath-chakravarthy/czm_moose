@@ -61,6 +61,10 @@ CZMUOBasedMaterial::CZMUOBasedMaterial(const InputParameters & parameters)
         declareProperty<RankTwoTensor>("traction_spatial_derivatives_local")),
     _czm_residual(declareProperty<RealVectorValue>("czm_residual")),
     _czm_jacobian(declareProperty<std::vector<std::vector<Real>>>("czm_jacobian")),
+    _normals_MP(declareProperty<RealVectorValue>("normals_MP")),
+    _normals_neighbor_MP(declareProperty<RealVectorValue>("normals_neighbor_MP")),
+    _normals_average(declareProperty<RealVectorValue>("normals_average")),
+
     _uo_id(0),
     _n_uo_czm_properties(_traction_separation_UO.getNumberStatefulMaterialProperties()),
     _n_non_stateful_uo_czm_properties(
@@ -106,9 +110,24 @@ CZMUOBasedMaterial::computeQpProperties()
           _traction_separation_UO.getNonStatefulMaterialPropertySize(mp_index));
 
   _czm_jacobian[_qp].resize(3, std::vector<Real>(3, 0));
+  _normals_MP[_qp] = _displacement_jump_UO.getNormalMaster(_current_elem->id(), _current_side, _qp);
+  _normals_neighbor_MP[_qp] =
+      _displacement_jump_UO.getNormalSlave(_current_elem->id(), _current_side, _qp);
 
+  for (unsigned int i = 0; i < 3; i++)
+  {
+    _normals_average[_qp](i) = (_normals_MP[_qp](i) + _normals_neighbor_MP[_qp](i)) / 2;
+    // if (_normals_MP[_qp](i) != _normals[_qp](i))
+    // {
+    //   std::cout << " normals are wrong: UO " << _normals_MP[_qp](i) << " MOOSE" <<
+    //   _normals[_qp](i)
+    //             << std::endl;
+    // }
+    // else
+    //   std::cout << " normals_average " << _normals_average[_qp](i) << std::endl;
+  }
   RealTensorValue RotationGlobal2Local =
-      RotationMatrix::rotVec1ToVec2(_normals[_qp], RealVectorValue(1, 0, 0));
+      RotationMatrix::rotVec1ToVec2(_normals_average[_qp], RealVectorValue(1, 0, 0));
 
   _displacement_jump[_qp] =
       _displacement_jump_UO.getDisplacementJump(_current_elem->id(), _current_side, _qp);

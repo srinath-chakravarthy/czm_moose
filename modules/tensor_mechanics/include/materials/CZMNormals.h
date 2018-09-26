@@ -29,6 +29,8 @@ public:
 protected:
   virtual void computeQpProperties() override;
   MaterialProperty<RealVectorValue> & _normals_MP;
+  MaterialProperty<unsigned int> & __elem;
+  MaterialProperty<unsigned int> & __qp;
 };
 
 #endif // CZMNORMALS_H

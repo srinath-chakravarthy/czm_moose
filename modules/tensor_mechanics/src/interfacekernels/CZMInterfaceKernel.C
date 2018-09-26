@@ -56,6 +56,7 @@ validParams<CZMInterfaceKernel>()
       "The name of the  material property representing the jacobian coefficients");
   params.addClassDescription("Cohesive Zone Interface Kernel for non-stateful"
                              "cohesive laws depending only on the displacement Jump");
+  // params.set<bool>("use_displaced_mesh") = false;
 
   return params;
 }

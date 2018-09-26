@@ -38,105 +38,14 @@
 []
 
 [Modules/TensorMechanics/Master]
-  strain = SMALL
-  add_variables = true
+  [./all]
+    strain = FINITE
+    add_variables = true
+    generate_output = 'stress_xx stress_yy stress_zz stress_yz stress_xz stress_xy'
+  [../]
 []
 
-[Variables]
-  [./disp_x]
-    order = FIRST
-    family = LAGRANGE
-  [../]
-  [./disp_y]
-    order = FIRST
-    family = LAGRANGE
-  [../]
-  [./disp_z]
-    order = FIRST
-    family = LAGRANGE
-  [../]
-[]
-[AuxVariables]
-  [./sxx]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./syy]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./szz]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./syz]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./sxz]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./sxy]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-[]
-[AuxKernels]
-  [./sxx]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 0
-    index_j = 0
-    variable = sxx
-    block = '1 2 3'
-  []
-  [./syy]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 1
-    index_j = 1
-    variable = syy
-    block = '1 2 3'
-  []
-  [./szz]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 2
-    index_j = 2
-    variable = szz
-    block = '1 2 3'
-  []
-  [./syz]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 1
-    index_j = 2
-    variable = syz
-    block = '1 2 3'
-  []
-  [./sxz]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 0
-    index_j = 2
-    variable = sxz
-    block = '1 2 3'
-  []
-  [./sxy]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 0
-    index_j = 1
-    variable = sxy
-    block = '1 2 3'
-  []
-[]
-[Kernels]
-  [./TensorMechanics]
-    displacements = 'disp_x disp_y disp_z'
-  [../]
-[]
+
 [BCs]
   [./bottom_x]
     type = DirichletBC
@@ -230,7 +139,7 @@
 []
 [UserObjects]
   [./displacement_jump_uo]
-    type = DispJumpUO_QP
+    type = DispJumpAndNormalsUO_QP
     disp_x = disp_x
     disp_y = disp_y
     disp_z = disp_z
@@ -253,13 +162,8 @@
     fill_method = symmetric_isotropic
     C_ijkl = '0.3 0.5e8'
   [../]
-  [./strain]
-    type = ComputeSmallStrain
-    displacements = 'disp_x disp_y disp_z'
-    block = '1 2 3'
-  [../]
   [./stress]
-    type = ComputeLinearElasticStress
+    type = ComputeFiniteStrainElasticStress
     block = '1 2 3'
   [../]
   [./gap]
@@ -268,6 +172,9 @@
     boundary = 'interface'
     displacement_jump_UO = 'displacement_jump_uo'
     traction_separation_UO = 'cohesive_law_exponential'
+  [../]
+  [./normal_MAT]
+    type = CZMNormals
   [../]
 []
  [Preconditioning]
@@ -303,37 +210,37 @@
 [Postprocessors]
   [./sxx_3G]
     type = ElementAverageValue
-    variable = sxx
+    variable = stress_xx
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./syy_3G]
     type = ElementAverageValue
-    variable = syy
+    variable = stress_yy
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./szz_3G]
     type = ElementAverageValue
-    variable = szz
+    variable = stress_zz
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./syz_3G]
     type = ElementAverageValue
-    variable = syz
+    variable = stress_yz
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./sxz_3G]
     type = ElementAverageValue
-    variable = sxz
+    variable = stress_xz
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./sxy_3G]
     type = ElementAverageValue
-    variable = sxy
+    variable = stress_xy
     execute_on = 'initial timestep_end'
     block = 3
   [../]
