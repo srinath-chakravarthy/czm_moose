@@ -116,7 +116,8 @@ CZMUOBasedMaterial::computeQpProperties()
 
   for (unsigned int i = 0; i < 3; i++)
   {
-    _normals_average[_qp](i) = (_normals_MP[_qp](i) + _normals_neighbor_MP[_qp](i)) / 2;
+    // _normals_average[_qp](i) = (_normals_MP[_qp](i) + _normals_neighbor_MP[_qp](i)) / 2;
+    _normals_average[_qp](i) = _normals[_qp](i);
     // if (_normals_MP[_qp](i) != _normals[_qp](i))
     // {
     //   std::cout << " normals are wrong: UO " << _normals_MP[_qp](i) << " MOOSE" <<

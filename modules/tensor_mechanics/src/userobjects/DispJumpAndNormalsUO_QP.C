@@ -109,16 +109,16 @@ DispJumpAndNormalsUO_QP::execute()
       // compute displacement jump
       vec[qp][1] = _normals_MP[qp];
       vec[qp][2] = _normals_MP_neighbor[qp];
-      std::cout << "CURR __elem : " << __elem[qp] << "__qp: " << __qp[qp] << " Normal         : ";
-      for (unsigned int i = 0; i < 3; i++)
-        std::cout << _normals_MP[qp](i) << "  ";
-      std::cout << std::endl;
-
-      std::cout << "NEIG __elem : " << __elem_neighbor[qp] << "__qp: " << __qp_neighbor[qp]
-                << "Normal: ";
-      for (unsigned int i = 0; i < 3; i++)
-        std::cout << _normals_MP_neighbor[qp](i) << "  ";
-      std::cout << std::endl;
+      // std::cout << "CURR __elem : " << __elem[qp] << "__qp: " << __qp[qp] << " Normal         :
+      // "; for (unsigned int i = 0; i < 3; i++)
+      //   std::cout << _normals_MP[qp](i) << "  ";
+      // std::cout << std::endl;
+      //
+      // std::cout << "NEIG __elem : " << __elem_neighbor[qp] << "__qp: " << __qp_neighbor[qp]
+      //           << "Normal: ";
+      // for (unsigned int i = 0; i < 3; i++)
+      //   std::cout << _normals_MP_neighbor[qp](i) << "  ";
+      // std::cout << std::endl;
     }
   }
   else
