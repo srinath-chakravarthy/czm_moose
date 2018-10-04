@@ -8,7 +8,6 @@
     type = BreakMeshByBlock
     # split_interface = false
   [../]
-
   [./add_side_sets]
      type = SideSetsFromNormals
      normals = '0  -1  0
@@ -21,6 +20,32 @@
      new_boundary = 'bottom top left right rear front'
      depends_on = breakmesh
    [../]
+   [./left_n1]
+     type = AddExtraNodeset
+     new_boundary = 'left_n1'
+     nodes = '3 70 115 192 247'
+     depends_on = breakmesh
+   [../]
+   [./left_n2]
+     type = AddExtraNodeset
+     new_boundary = 'left_n2'
+     nodes = '8 38 26 3 46'
+     depends_on = breakmesh
+   [../]
+   [./right_n1]
+     type = AddExtraNodeset
+     new_boundary = 'right_n1'
+     nodes = '226 289 311 384'
+     depends_on = breakmesh
+   [../]
+   # [./right_n2]
+   #   type = AddExtraNodeset
+   #   new_boundary = 'right_n2'
+   #   nodes = '229 277 297 534'
+   #   depends_on = breakmesh
+   # [../]
+
+   # nodes = '229 277 297 534'
 
 []
 
@@ -38,46 +63,10 @@
 
 
 [BCs]
-  # [./bottom_x]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = bottom
-  #   value = 0.0
-  # [../]
-  # [./bottom_y]
-  #   type = FunctionDirichletBC
-  #   variable = disp_y
-  #   boundary = bottom
-  #   function = loadUnloadFunction_NEG
-  # [../]
-  # [./bottom_z]
-  #   type = DirichletBC
-  #   variable = disp_z
-  #   boundary = bottom
-  #   value = 0.0
-  # [../]
-  # [./top_x]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = top
-  #   value = 0.0
-  # [../]
-  # [./top_y]
-  #   type = FunctionDirichletBC
-  #   variable = disp_y
-  #   boundary = top
-  #   function = loadUnloadFunction
-  # [../]
-  # [./top_z]
-  #   type = DirichletBC
-  #   variable = disp_z
-  #   boundary = top
-  #   value = 0.0
-  # [../]
   [./left_y]
     type = DirichletBC
     variable = disp_y
-    boundary = left
+    boundary = 'left_n1 left_n2'
     value = 0.0
   [../]
   [./left_x]
@@ -89,13 +78,13 @@
   [./left_z]
     type = DirichletBC
     variable = disp_z
-    boundary = left
+    boundary = left_n1
     value = 0.0
   [../]
   [./right_x]
     type = DirichletBC
     variable = disp_y
-    boundary = right
+    boundary = 'right_n1'
     value = 0.0
   [../]
   [./right_y]
@@ -107,58 +96,11 @@
   [./right_z]
     type = DirichletBC
     variable = disp_z
-    boundary = right
+    boundary = right_n1
     value = 0.0
   [../]
-  # [./left_x]
-  #   type = FunctionDirichletBC
-  #   variable = disp_x
-  #   boundary = left
-  #   function = loadUnloadFunction_NEG
-  # [../]
-  # [./right_x]
-  #   type = FunctionDirichletBC
-  #   variable = disp_x
-  #   boundary = right
-  #   function = loadUnloadFunction
-  # [../]
-  # [./rear_x]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = rear
-  #   value = 0.0
-  # [../]
-  # [./rear_y]
-  #   type = DirichletBC
-  #   variable = disp_y
-  #   boundary = rear
-  #   value = 0.0
-  # [../]
-  # [./rear_z]
-  #   type = FunctionDirichletBC
-  #   variable = disp_z
-  #   boundary = rear
-  #   function = loadUnloadFunction_NEG
-  # [../]
-  # [./front_x]
-  #   type = DirichletBC
-  #   variable = disp_x
-  #   boundary = front
-  #   value = 0.0
-  # [../]
-  # [./front_y]
-  #   type = DirichletBC
-  #   variable = disp_y
-  #   boundary = front
-  #   value = 0.0
-  # [../]
-  # [./front_z]
-  #   type = FunctionDirichletBC
-  #   variable = disp_z
-  #   boundary = front
-  #   function = loadUnloadFunction
-  # [../]
 []
+
 [Functions]
   [./loadUnloadFunction]
     type = PiecewiseLinear
@@ -251,7 +193,7 @@
     displacement_jump_UO = 'displacement_jump_uo'
     traction_separation_UO = 'cohesive_law_exponential'
     unload_traction_separation_UO = 'cohesive_law_unload_linear'
-    coopenetration_penalty = 1e4
+    coopenetration_penalty = 100
   [../]
   [./normal_MAT]
     type = CZMNormals
@@ -274,7 +216,7 @@
   nl_rel_tol = 1e-6
   nl_max_its = 50
   l_tol = 1e-10
-  l_max_its = 50
+  l_max_its = 5
   start_time = 0.0
   dt = 1
   dtmin = 0.1
