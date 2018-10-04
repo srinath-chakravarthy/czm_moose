@@ -38,15 +38,12 @@
      nodes = '226 289 311 384'
      depends_on = breakmesh
    [../]
-   # [./right_n2]
-   #   type = AddExtraNodeset
-   #   new_boundary = 'right_n2'
-   #   nodes = '229 277 297 534'
-   #   depends_on = breakmesh
-   # [../]
-
-   # nodes = '229 277 297 534'
-
+   [./right_n2]
+     type = AddExtraNodeset
+     new_boundary = 'right_n2'
+     nodes = '229 277 297 534'
+     depends_on = breakmesh
+   [../]
 []
 
 [GlobalParams]
@@ -106,16 +103,7 @@
     type = PiecewiseLinear
     x = '0 4      8  14     21      32    42   67   92 142'
     y = '0 0.002  0  0.012  -0.002   0.02   0    0.05   0   0.1'
-    # x = '0 0.2    0.4 0.6'
-    # y = '0 0.0005 0   0.0005'
   [../]
-  # [./loadUnloadFunction_NEG]
-  #   type = PiecewiseLinear
-  #   x = '0 4     8 14     21      32    42   67   92 142'
-  #   y = '0 -0.002  0  -0.012  0.002   -0.02   0    -0.05   0   -0.1'
-  #   # x = '0 1    2 '
-  #   # y = '0 -0.2 0 '
-  # [../]
 []
 [InterfaceKernels]
   [./interface_x]
@@ -195,9 +183,6 @@
     unload_traction_separation_UO = 'cohesive_law_unload_linear'
     coopenetration_penalty = 100
   [../]
-  [./normal_MAT]
-    type = CZMNormals
-  [../]
 []
  [Preconditioning]
    [./SMP]
@@ -229,37 +214,37 @@
   [../]
 []
 [Postprocessors]
-  [./sxx_3G]
+  [./sxx]
     type = ElementAverageValue
     variable = stress_xx
     execute_on = 'initial timestep_end'
   [../]
-  [./syy_3G]
+  [./syy]
     type = ElementAverageValue
     variable = stress_yy
     execute_on = 'initial timestep_end'
   [../]
-  [./szz_3G]
+  [./szz]
     type = ElementAverageValue
     variable = stress_zz
     execute_on = 'initial timestep_end'
   [../]
-  [./syz_3G]
+  [./syz]
     type = ElementAverageValue
     variable = stress_yz
     execute_on = 'initial timestep_end'
   [../]
-  [./sxz_3G]
+  [./sxz]
     type = ElementAverageValue
     variable = stress_xz
     execute_on = 'initial timestep_end'
   [../]
-  [./sxy_3G]
+  [./sxy]
     type = ElementAverageValue
     variable = stress_xy
     execute_on = 'initial timestep_end'
   [../]
-  [./disp_3Z]
+  [./disp_rightX]
     type = SideAverageValue
     variable = disp_x
     execute_on = 'initial timestep_end'

@@ -164,7 +164,7 @@
 []
 [UserObjects]
   [./displacement_jump_uo]
-    type = DispJumpAndNormalsUO_QP
+    type = DispJumpUO_QP
     disp_x = disp_x
     disp_y = disp_y
     disp_z = disp_z
@@ -204,10 +204,6 @@
     traction_separation_UO = 'cohesive_law_exponential'
     unload_traction_separation_UO  = 'cohesive_law_unload_linear'
     coopenetration_penalty = 1e3
-  [../]
-  [./Normals_Mat]
-    type = CZMNormals
-    block = '1 2 3'
   [../]
 []
  [Preconditioning]
@@ -318,10 +314,10 @@
     execute_on = 'initial timestep_end'
     block = 2
   [../]
-  [./disp_2Z]
-    type = ElementAverageValue
+  [./disp_top3_z]
+    type = SideAverageValue
     variable = disp_z
     execute_on = 'initial timestep_end'
-    block = 2
+    boundary = 'top_3'
   [../]
 []

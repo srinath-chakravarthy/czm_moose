@@ -52,66 +52,14 @@
 []
 
 [Modules/TensorMechanics/Master]
-  strain = SMALL
-  add_variables = true
+  [./all]
+    strain = SMALL
+    add_variables = true
+    generate_output = 'stress_xx stress_yy stress_xy'
+  [../]
 []
 
-[Variables]
-  [./disp_x]
-    order = FIRST
-    family = LAGRANGE
-  [../]
-  [./disp_y]
-    order = FIRST
-    family = LAGRANGE
-  [../]
 
-[]
-[AuxVariables]
-  [./sxx]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./syy]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./sxy]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-[]
-[AuxKernels]
-  [./sxx]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 0
-    index_j = 0
-    variable = sxx
-    # block = '1 2 3'
-  []
-  [./syy]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 1
-    index_j = 1
-    variable = syy
-    # block = '1 2 3'
-  []
-  [./sxy]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 0
-    index_j = 1
-    variable = sxy
-    # block = '1 2 3'
-  []
-[]
-[Kernels]
-  [./TensorMechanics]
-    displacements = 'disp_x disp_y'
-  [../]
-[]
 [BCs]
   [./bottom_y]
     type = FunctionDirichletBC

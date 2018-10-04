@@ -38,105 +38,14 @@
 []
 
 [Modules/TensorMechanics/Master]
-  strain = SMALL
-  add_variables = true
+  [./all]
+    strain = FINITE
+    add_variables = true
+    generate_output = 'stress_xx stress_yy stress_zz stress_yz stress_xz stress_xy'
+  [../]
 []
 
-[Variables]
-  [./disp_x]
-    order = FIRST
-    family = LAGRANGE
-  [../]
-  [./disp_y]
-    order = FIRST
-    family = LAGRANGE
-  [../]
-  [./disp_z]
-    order = FIRST
-    family = LAGRANGE
-  [../]
-[]
-[AuxVariables]
-  [./sxx]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./syy]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./szz]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./syz]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./sxz]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./sxy]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-[]
-[AuxKernels]
-  [./sxx]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 0
-    index_j = 0
-    variable = sxx
-    block = '1 2 3'
-  []
-  [./syy]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 1
-    index_j = 1
-    variable = syy
-    block = '1 2 3'
-  []
-  [./szz]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 2
-    index_j = 2
-    variable = szz
-    block = '1 2 3'
-  []
-  [./syz]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 1
-    index_j = 2
-    variable = syz
-    block = '1 2 3'
-  []
-  [./sxz]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 0
-    index_j = 2
-    variable = sxz
-    block = '1 2 3'
-  []
-  [./sxy]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    index_i = 0
-    index_j = 1
-    variable = sxy
-    block = '1 2 3'
-  []
-[]
-[Kernels]
-  [./TensorMechanics]
-    displacements = 'disp_x disp_y disp_z'
-  [../]
-[]
+
 [BCs]
   [./bottom_x]
     type = DirichletBC
@@ -157,45 +66,45 @@
     value = 0.0
   [../]
   [./top2_x]
-    type = FunctionDirichletBC
+    type = DirichletBC
     variable = disp_x
     boundary = top_2
-    function = 0.01*t
+    value = 0.0
   [../]
   [./top2_y]
-    type = FunctionDirichletBC
+    type = DirichletBC
     variable = disp_y
     boundary = top_2
-    function = 0.02*t
+    value = 0.0
   [../]
   [./top2_z]
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_2
-    function = 0.03*t
+    function = 1*t
   [../]
   [./top3_x]
-    type = FunctionDirichletBC
+    type = DirichletBC
     variable = disp_x
     boundary = top_3
-    function = 0.01*t
+    value = 0.0
   [../]
   [./top3_y]
-    type = FunctionDirichletBC
+    type = DirichletBC
     variable = disp_y
     boundary = top_3
-    function = 0.02*t
+    value = 0.0
   [../]
   [./top3_z]
     type = FunctionDirichletBC
     variable = disp_z
     boundary = top_3
-    function = 0.03*t
+    function = 1*t
   [../]
 []
 [InterfaceKernels]
   [./interface_x]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_x
     neighbor_var = disp_x
     disp_1 = disp_y
@@ -206,7 +115,7 @@
     boundary = 'interface'
   [../]
   [./interface_y]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_y
     neighbor_var = disp_y
     disp_1 = disp_x
@@ -217,7 +126,7 @@
     boundary = 'interface'
   [../]
   [./interface_z]
-    type = czmInterfaceKernel
+    type = CZMInterfaceKernel
     variable = disp_z
     neighbor_var = disp_z
     disp_1 = disp_x
@@ -235,7 +144,14 @@
     disp_y = disp_y
     disp_z = disp_z
     boundary = 'interface'
-    execute_on = 'initial LINEAR timestep_end'
+    execute_on = 'initial NONLINEAR LINEAR timestep_end'
+  [../]
+  [./cohesive_law_3DC]
+    type = CZMLaw3DC
+    MaxAllowableTraction = '100 70'
+    DeltaU0 = '1 0.7'
+    displacement_jump_mp_name = 'displacement_jump_local'
+    boundary = 'interface'
   [../]
 []
 
@@ -246,23 +162,16 @@
     fill_method = symmetric_isotropic
     C_ijkl = '0.3 0.5e8'
   [../]
-  [./strain]
-    type = ComputeSmallStrain
-    displacements = 'disp_x disp_y disp_z'
-    block = '1 2 3'
-  [../]
   [./stress]
-    type = ComputeLinearElasticStress
+    type = ComputeFiniteStrainElasticStress
     block = '1 2 3'
   [../]
   [./gap]
-    type = czmUOMatStateful
+    type = CZMUOBasedMaterial
     is_interface_material = true
     boundary = 'interface'
     displacement_jump_UO = 'displacement_jump_uo'
-    DeltaU0 = '1.0'
-    MaxAllowableTraction = '100'
-    Beta = 0.5
+    traction_separation_UO = 'cohesive_law_3DC'
   [../]
 []
  [Preconditioning]
@@ -277,17 +186,18 @@
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'lu'
   # petsc_options_value = 'hypre     boomerang'
-  solve_type = newton
+  solve_type = NEWTON
   nl_abs_tol = 1e-8
   nl_rel_tol = 1e-6
   nl_max_its = 5
   l_tol = 1e-10
   l_max_its = 50
   start_time = 0.0
-  dt = 10
-  end_time = 500
-  dtmin = 10
+  dt = 0.2
+  end_time = 5
+  dtmin = 0.2
   line_search = none
+  # num_steps = 1
 []
 [Outputs]
   [./out]
@@ -297,38 +207,44 @@
 [Postprocessors]
   [./sxx_3G]
     type = ElementAverageValue
-    variable = sxx
+    variable = stress_xx
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./syy_3G]
     type = ElementAverageValue
-    variable = syy
+    variable = stress_yy
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./szz_3G]
     type = ElementAverageValue
-    variable = szz
+    variable = stress_zz
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./syz_3G]
     type = ElementAverageValue
-    variable = syz
+    variable = stress_yz
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./sxz_3G]
     type = ElementAverageValue
-    variable = sxz
+    variable = stress_xz
     execute_on = 'initial timestep_end'
     block = 3
   [../]
   [./sxy_3G]
     type = ElementAverageValue
-    variable = sxy
+    variable = stress_xy
     execute_on = 'initial timestep_end'
     block = 3
+  [../]
+  [./disp_top3_z]
+    type = SideAverageValue
+    variable = disp_z
+    execute_on = 'initial timestep_end'
+    boundary = 'top_3'
   [../]
 []
