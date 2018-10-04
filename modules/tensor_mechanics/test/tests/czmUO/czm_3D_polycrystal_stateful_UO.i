@@ -162,10 +162,10 @@
 [Functions]
   [./loadUnloadFunction]
     type = PiecewiseLinear
-    # x = '0 4     8 14     21      32    42   67   92 142'
-    # y = '0 0.002  0  0.012  -0.002   0.02   0    0.05   0   0.1'
-    x = '0 0.2    0.4 0.6'
-    y = '0 0.0005 0   0.0005'
+    x = '0 4      8  14     21      32    42   67   92 142'
+    y = '0 0.002  0  0.012  -0.002   0.02   0    0.05   0   0.1'
+    # x = '0 0.2    0.4 0.6'
+    # y = '0 0.0005 0   0.0005'
   [../]
   # [./loadUnloadFunction_NEG]
   #   type = PiecewiseLinear
@@ -212,7 +212,7 @@
 []
 [UserObjects]
   [./displacement_jump_uo]
-    type = DispJumpAndNormalsUO_QP
+    type = DispJumpUO_QP
     disp_x = disp_x
     disp_y = disp_y
     disp_z = disp_z
@@ -272,13 +272,13 @@
   solve_type = NEWTON
   nl_abs_tol = 1e-4
   nl_rel_tol = 1e-6
-  nl_max_its = 20
+  nl_max_its = 50
   l_tol = 1e-10
   l_max_its = 50
   start_time = 0.0
-  dt = 0.1
+  dt = 1
   dtmin = 0.1
-  end_time = 0.6
+  end_time = 142
   line_search = none
 []
 [Outputs]
@@ -318,8 +318,9 @@
     execute_on = 'initial timestep_end'
   [../]
   [./disp_3Z]
-    type = ElementAverageValue
-    variable = disp_z
+    type = SideAverageValue
+    variable = disp_x
     execute_on = 'initial timestep_end'
+    boundary = 'right'
   [../]
 []

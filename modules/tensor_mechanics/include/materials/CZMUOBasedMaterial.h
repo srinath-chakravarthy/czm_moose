@@ -11,7 +11,7 @@
 #define CZMUOBASEDMATERIAL_H
 
 #include "Material.h"
-#include "DispJumpAndNormalsUO_QP.h"
+#include "DispJumpUO_QP.h"
 #include "CZMTractionSeparationUOBase.h"
 class CZMUOBasedMaterial;
 template <>
@@ -29,7 +29,7 @@ protected:
   virtual void initQpStatefulProperties() override;
 
   /// User objects computing the displacement jump
-  const DispJumpAndNormalsUO_QP & _displacement_jump_UO;
+  const DispJumpUO_QP & _displacement_jump_UO;
 
   /// User objectets defining the traction separation law
   /// non linear TS law
@@ -70,8 +70,8 @@ protected:
   /// the material property in which the jacobian is stored
   MaterialProperty<std::vector<std::vector<Real>>> & _czm_jacobian;
 
-  MaterialProperty<RealVectorValue> & _normals_MP;
-  MaterialProperty<RealVectorValue> & _normals_neighbor_MP;
+  // MaterialProperty<RealVectorValue> & _normals_MP;
+  // MaterialProperty<RealVectorValue> & _normals_neighbor_MP;
   MaterialProperty<RealVectorValue> & _normals_average;
 
   unsigned int _uo_id;
