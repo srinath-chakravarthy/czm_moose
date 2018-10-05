@@ -23,25 +23,25 @@
    [./left_n1]
      type = AddExtraNodeset
      new_boundary = 'left_n1'
-     nodes = '3 70 115 192 247'
+     nodes = '2 69 114 191 246'
      depends_on = breakmesh
    [../]
    [./left_n2]
      type = AddExtraNodeset
      new_boundary = 'left_n2'
-     nodes = '8 38 26 3 46'
+     nodes = '7 37 25 2 45'
      depends_on = breakmesh
    [../]
    [./right_n1]
      type = AddExtraNodeset
      new_boundary = 'right_n1'
-     nodes = '226 289 311 384'
+     nodes = '225 288 310 383'
      depends_on = breakmesh
    [../]
    [./right_n2]
      type = AddExtraNodeset
      new_boundary = 'right_n2'
-     nodes = '229 277 297 534'
+     nodes = '228 276 296 533'
      depends_on = breakmesh
    [../]
 []
