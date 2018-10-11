@@ -1,9 +1,9 @@
 """Defines Renderer objects that convert AST (from Reader) into an output format."""
 import os
-import re
 import logging
 import traceback
 import uuid
+import subprocess
 
 import anytree
 
@@ -12,7 +12,7 @@ import mooseutils
 import MooseDocs
 from MooseDocs import common
 from MooseDocs.common import exceptions, mixins
-from MooseDocs.tree import html, latex, base, page
+from MooseDocs.tree import html, latex, base, page, tokens
 
 LOG = logging.getLogger(__name__)
 
@@ -83,17 +83,6 @@ class Renderer(mixins.ConfigObject, mixins.TranslatorObject, mixins.ComponentObj
         self.translator.executeExtensionFunction('postRender', root, config)
         return root
 
-    def write(self, output): #pylint: disable=no-self-use
-        """
-        Write the rendered output content to a single string, this method automatically strips
-        all double new lines.
-
-        Inputs:
-            output[tree.base.NodeBase]: The output tree created by calling render.
-        """
-        text = output.write()
-        return re.sub(r'(\n{2,})', '\n', text, flags=re.MULTILINE)
-
     def process(self, parent, token):
         """
         Convert the AST defined in the token input into a output node of parent.
@@ -130,6 +119,14 @@ class Renderer(mixins.ConfigObject, mixins.TranslatorObject, mixins.ComponentObj
             for child in token.children:
                 self.process(el, child)
 
+    def preExecute(self):
+        """Called by Translator prior to conversion."""
+        pass
+
+    def postExecute(self):
+        """Called by Translator after conversion."""
+        pass
+
     def _method(self, component):
         """
         Return the desired method to call on the RenderComponent object.
@@ -159,6 +156,7 @@ class HTMLRenderer(Renderer):
     Converts AST into HTML.
     """
     METHOD = 'createHTML'
+    EXTENSION = '.html'
 
     def createRoot(self, config):
         return html.Tag(None, 'body', class_='moose-content')
@@ -214,7 +212,6 @@ class MaterializeRenderer(HTMLRenderer):
 
     def createRoot(self, config):
         return html.Tag(None, '!DOCTYPE html', close=False)
-
 
     def _method(self, component):
         """
@@ -418,31 +415,47 @@ class MaterializeRenderer(HTMLRenderer):
                 else:
                     add_to_nav(key1, value1, self.__navigation)
 
-        # Build the links
+        # Hamburger icon
+        hamburger = html.Tag(nav, 'a', href=u"#", class_="button-collapse")
+        hamburger['data-activates'] = "moose-mobile-menu"
+        html.Tag(hamburger, 'i', class_="material-icons", string=u'menu')
+
+        # Build menu
         top_ul = html.Tag(nav, 'ul', id="nav-mobile", class_="right hide-on-med-and-down")
-        for key1, value1 in self.__navigation.iteritems():
+        side_ul = html.Tag(nav, 'ul', id="moose-mobile-menu", class_="side-nav")
+        def menu_helper(ul): #pylint: disable=invalid-name
+            """Add menu items to the supplied ul tag."""
 
-            if not isinstance(value1, dict):
-                href = value1.relativeDestination(root_page)
-                top_li = html.Tag(top_ul, 'li')
-                a = html.Tag(top_li, 'a', href=href, string=unicode(key1))
+            for key1, value1 in self.__navigation.iteritems():
+                if isinstance(value1, str):
+                    top_li = html.Tag(ul, 'li')
+                    a = html.Tag(top_li, 'a', href=value1, string=unicode(key1))
 
-            else:
-                id_ = uuid.uuid4()
-                top_li = html.Tag(top_ul, 'li')
-                a = html.Tag(top_li, 'a', class_="dropdown-button", href="#!", string=unicode(key1))
-                a['data-activates'] = id_
-                a['data-constrainWidth'] = "false"
-                html.Tag(a, "i", class_='material-icons right', string=u'arrow_drop_down')
+                elif not isinstance(value1, dict):
+                    href = value1.relativeDestination(root_page)
+                    top_li = html.Tag(ul, 'li')
+                    a = html.Tag(top_li, 'a', href=href, string=unicode(key1))
 
-                bot_ul = html.Tag(nav, 'ul', id_=id_, class_='dropdown-content')
-                for key2, node in value1.iteritems():
-                    bot_li = html.Tag(bot_ul, 'li')
-                    if isinstance(node, str):
-                        a = html.Tag(bot_li, 'a', href=node, string=unicode(key2))
-                    else:
-                        href = node.relativeDestination(root_page)
-                        a = html.Tag(bot_li, 'a', href=href, string=unicode(key2))
+                else:
+                    id_ = uuid.uuid4()
+                    top_li = html.Tag(ul, 'li')
+                    a = html.Tag(top_li, 'a', class_="dropdown-button", href="#!",
+                                 string=unicode(key1))
+                    a['data-activates'] = id_
+                    a['data-constrainWidth'] = "false"
+                    html.Tag(a, "i", class_='material-icons right', string=u'arrow_drop_down')
+
+                    bot_ul = html.Tag(nav, 'ul', id_=id_, class_='dropdown-content')
+                    for key2, node in value1.iteritems():
+                        bot_li = html.Tag(bot_ul, 'li')
+                        if isinstance(node, str):
+                            a = html.Tag(bot_li, 'a', href=node, string=unicode(key2))
+                        else:
+                            href = node.relativeDestination(root_page)
+                            a = html.Tag(bot_li, 'a', href=href, string=unicode(key2))
+
+        menu_helper(top_ul)
+        menu_helper(side_ul)
 
     def _addSearch(self, config, nav, root_page): #pylint: disable=no-self-use
         """
@@ -496,7 +509,8 @@ class MaterializeRenderer(HTMLRenderer):
         """
         name = config.get('name', None)
         if name:
-            html.Tag(nav, 'a', class_='left moose-logo', href=unicode(self.get('home', '#!')),
+            html.Tag(nav, 'a', class_='left moose-logo hide-on-med-and-down',
+                     href=unicode(self.get('home', '#!')),
                      string=unicode(name))
 
     def _addBreadcrumbs(self, config, container, root_page): #pylint: disable=no-self-use
@@ -601,6 +615,7 @@ class LatexRenderer(Renderer):
     Renderer for converting AST to LaTeX.
     """
     METHOD = 'createLatex'
+    EXTENSION = '.tex'
 
     def __init__(self, *args, **kwargs):
         self._packages = set()
@@ -612,21 +627,106 @@ class LatexRenderer(Renderer):
         """
         return base.NodeBase()
 
-    def convert(self, root, ast, config): #pylint: disable=unused-argument
+    def postExecute(self):
         """
-        Built LaTeX tree from AST.
+        Combines all the LaTeX files into a single file.
+
+        Organizing the files is still a work in progress.
         """
-        latex.Command(root, 'documentclass', string=u'book', end='\n')
+        def sort_node(node):
+            """Helper to organize nodes files then directories."""
+            files = []
+            dirs = []
+            for child in node.children:
+                child.parent = None
+                if isinstance(child, page.DirectoryNode):
+                    dirs.append(child)
+                else:
+                    files.append(child)
+                sort_node(child)
 
-        for package in self._packages:
-            latex.Command(root, 'usepackage', string=package, end='\n')
+            for child in files:
+                child.parent = node
+            for child in dirs:
+                child.parent = node
 
-        doc = latex.Environment(root, 'document')
-        self.process(doc, ast)
-        return root
+        root = self.translator.root
+        sort_node(root)
+
+        main = self._processPages(root)
+        loc = self.translator['destination']
+        with open(os.path.join(loc, 'main.tex'), 'w+') as fid:
+            fid.write(main.write())
+
+        main_tex = os.path.join(loc, 'main.tex')
+        LOG.info("Building complete LaTeX document: %s", main_tex)
+        cmd = ['pdflatex', '-halt-on-error', main_tex]
+        try:
+            subprocess.check_output(cmd, cwd=loc, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            msg = 'Failed to run command: {}'
+            raise exceptions.MooseDocsException(msg, ' '.join(cmd), error=e.output)
 
     def addPackage(self, *args):
         """
         Add a LaTeX package to the list of packages for rendering.
         """
         self._packages.update(args)
+
+    def _processPages(self, root):
+        """
+        Build a main latex file that includes the others.
+        """
+
+        main = base.NodeBase()
+        latex.Command(main, 'documentclass', string=u'report', end='')
+        for package in self._packages:
+            latex.Command(main, 'usepackage', string=package, start='\n', end='')
+
+        func = lambda n: isinstance(n, page.MarkdownNode)
+        nodes = [n for n in anytree.PreOrderIter(root, filter_=func)]
+        for node in nodes:
+
+            # If the parallel implementation was better this would not be needed.
+            node.tokenize()
+            node.render(node.ast)
+
+            if node.depth == 1:
+                title = latex.Command(main, 'title', start='\n')
+                for child in node.result.children[0]:#[0].children:
+                    child.parent = title
+                node.result.children[0].parent = None
+
+        doc = latex.Environment(main, 'document', end='\n')
+        latex.Command(doc, 'maketitle')
+        for node in nodes:
+            node.write()
+            cmd = latex.Command(doc, 'input', start='\n')
+            latex.String(cmd, content=unicode(node.destination), escape=False)
+
+        return main
+
+class JSONRenderer(Renderer):
+    """
+    Render the AST as a JSON file.
+    """
+    METHOD = 'dummy' # The AST can write JSON directly.
+    EXTENSION = '.json'
+
+    def createRoot(self, config): #pylint: disable=unused-argument
+        """
+        Return LaTeX root node.
+        """
+        return tokens.Token()
+
+    def _method(self, component):
+        """
+        Do not call any methods on the component, just create a new tree for writing JSON.
+        """
+        return self.__function
+
+    @staticmethod
+    def __function(token, parent):
+        """Replacement for Component function (see _method)."""
+        token.parent = parent
+        return token

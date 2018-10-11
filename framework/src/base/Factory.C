@@ -18,7 +18,8 @@ Factory::Factory(MooseApp & app) : _app(app) {}
 Factory::~Factory() {}
 
 void
-Factory::reg(const std::string & obj_name,
+Factory::reg(const std::string & label,
+             const std::string & obj_name,
              const buildPtr & build_ptr,
              const paramsPtr & params_ptr,
              const std::string & deprecated_time,
@@ -26,6 +27,11 @@ Factory::reg(const std::string & obj_name,
              const std::string & file,
              int line)
 {
+  // do nothing if we have already added this exact object before
+  auto key = std::make_pair(label, obj_name);
+  if (_objects_by_label.find(key) != _objects_by_label.end())
+    return;
+
   /*
    * If _registerable_objects has been set the user has requested that we only register some
    * subset
@@ -38,16 +44,14 @@ Factory::reg(const std::string & obj_name,
   if (_registerable_objects.empty() ||
       _registerable_objects.find(obj_name) != _registerable_objects.end())
   {
-    if (_name_to_build_pointer.find(obj_name) == _name_to_build_pointer.end())
-    {
-      _name_to_build_pointer[obj_name] = build_ptr;
-      _name_to_params_pointer[obj_name] = params_ptr;
-    }
-    else
-      mooseError("Object '" + obj_name + "' registered in multiple files: ",
+    if (_name_to_build_pointer.find(obj_name) != _name_to_build_pointer.end())
+      mooseError("Object '" + obj_name + "' registered from multiple files: ",
                  file,
                  " and ",
                  _name_to_line.getInfo(obj_name).file());
+    _name_to_build_pointer[obj_name] = build_ptr;
+    _name_to_params_pointer[obj_name] = params_ptr;
+    _objects_by_label.insert(key);
   }
   _name_to_line.addInfo(obj_name, file, line);
 
@@ -159,12 +163,18 @@ Factory::create(const std::string & obj_name,
 }
 
 void
+Factory::releaseSharedObjects(const MooseObject & moose_object, THREAD_ID tid)
+{
+  _app.getInputParameterWarehouse().removeInputParameters(moose_object, tid);
+}
+
+void
 Factory::restrictRegisterableObjects(const std::vector<std::string> & names)
 {
   _registerable_objects.insert(names.begin(), names.end());
 }
 
-time_t
+std::time_t
 Factory::parseTime(const std::string t_str)
 {
   // The string must be a certain length to be valid
@@ -172,7 +182,7 @@ Factory::parseTime(const std::string t_str)
     mooseError("The deprecated time not formatted correctly; it must be given as mm/dd/yyyy HH:MM");
 
   // Store the time, the time must be specified as: mm/dd/yyyy HH:MM
-  time_t t_end;
+  std::time_t t_end;
   struct tm * t_end_info;
   time(&t_end);
   t_end_info = localtime(&t_end);
@@ -189,18 +199,18 @@ Factory::parseTime(const std::string t_str)
 void
 Factory::deprecatedMessage(const std::string obj_name)
 {
-  std::map<std::string, time_t>::iterator time_it = _deprecated_time.find(obj_name);
+  std::map<std::string, std::time_t>::iterator time_it = _deprecated_time.find(obj_name);
 
   // If the object is not deprecated return
   if (time_it == _deprecated_time.end())
     return;
 
   // Get the current time
-  time_t now;
+  std::time_t now;
   time(&now);
 
   // Get the stop time
-  time_t t_end = time_it->second;
+  std::time_t t_end = time_it->second;
 
   // Message storage
   std::ostringstream msg;

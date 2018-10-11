@@ -9,9 +9,6 @@
 
 #include "BoundaryFluxBase.h"
 
-// Static mutex definition
-Threads::spin_mutex BoundaryFluxBase::_mutex;
-
 template <>
 InputParameters
 validParams<BoundaryFluxBase>()
@@ -21,10 +18,8 @@ validParams<BoundaryFluxBase>()
 }
 
 BoundaryFluxBase::BoundaryFluxBase(const InputParameters & parameters)
-  : GeneralUserObject(parameters)
+  : ThreadedGeneralUserObject(parameters)
 {
-  _flux.resize(libMesh::n_threads());
-  _jac1.resize(libMesh::n_threads());
 }
 
 void
@@ -44,38 +39,39 @@ BoundaryFluxBase::finalize()
 {
 }
 
+void
+BoundaryFluxBase::threadJoin(const UserObject &)
+{
+}
+
 const std::vector<Real> &
 BoundaryFluxBase::getFlux(unsigned int iside,
                           dof_id_type ielem,
                           const std::vector<Real> & uvec1,
-                          const RealVectorValue & dwave,
-                          THREAD_ID tid) const
+                          const RealVectorValue & dwave) const
 {
-  Threads::spin_mutex::scoped_lock lock(_mutex);
   if (_cached_elem_id != ielem || _cached_side_id != iside)
   {
     _cached_elem_id = ielem;
     _cached_side_id = iside;
 
-    calcFlux(iside, ielem, uvec1, dwave, _flux[tid]);
+    calcFlux(iside, ielem, uvec1, dwave, _flux);
   }
-  return _flux[tid];
+  return _flux;
 }
 
 const DenseMatrix<Real> &
 BoundaryFluxBase::getJacobian(unsigned int iside,
                               dof_id_type ielem,
                               const std::vector<Real> & uvec1,
-                              const RealVectorValue & dwave,
-                              THREAD_ID tid) const
+                              const RealVectorValue & dwave) const
 {
-  Threads::spin_mutex::scoped_lock lock(_mutex);
   if (_cached_elem_id != ielem || _cached_side_id != iside)
   {
     _cached_elem_id = ielem;
     _cached_side_id = iside;
 
-    calcJacobian(iside, ielem, uvec1, dwave, _jac1[tid]);
+    calcJacobian(iside, ielem, uvec1, dwave, _jac1);
   }
-  return _jac1[tid];
+  return _jac1;
 }

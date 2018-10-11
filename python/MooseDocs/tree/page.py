@@ -191,7 +191,8 @@ class MarkdownNode(FileNode):
     @property
     def destination(self):
         """The content destination (override)."""
-        return super(MarkdownNode, self).destination.replace('.md', '.html')
+        return super(MarkdownNode, self).destination.replace('.md',
+                                                             self.translator.renderer.EXTENSION)
 
     @property
     def ast(self):
@@ -238,7 +239,7 @@ class MarkdownNode(FileNode):
         if self.source and os.path.exists(self.source):
             LOG.debug('READ %s', self.source)
             self._modified = os.path.getmtime(self.source)
-            self.content = common.read(self.source) #pylint: disable=attribute-defined-outside-init
+            self.content = common.read(self.source).lstrip('\n') #pylint: disable=attribute-defined-outside-init
 
     def modified(self):
         """
@@ -265,7 +266,7 @@ class MarkdownNode(FileNode):
         if (self._index is None) and (self._result is not None):
             self._index = []
             for section in anytree.search.findall_by_attr(self._result, 'section'):
-                name = self.name
+                name = self.name.replace('_', ' ')
                 if name.endswith('.md'):
                     name = name[:-3]
                 text = section['data-section-text']

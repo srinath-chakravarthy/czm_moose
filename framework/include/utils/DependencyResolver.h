@@ -127,6 +127,9 @@ private:
   /// This is our main data structure a multimap that contains any number of dependencies in a key = value format
   std::multimap<T, T> _depends;
 
+  /// Used to avoid duplicate tracking of identical insertions of dependencies
+  std::set<std::pair<T, T>> _unique_deps;
+
   /// Extra items that need to come out in the sorted list but contain no dependencies
   std::vector<T> _independent_items;
 
@@ -204,6 +207,11 @@ template <typename T>
 void
 DependencyResolver<T>::insertDependency(const T & key, const T & value)
 {
+  auto k = std::make_pair(key, value);
+  if (_unique_deps.count(k) > 0)
+    return;
+  _unique_deps.insert(k);
+
   if (dependsOn(value, key))
   {
     throw CyclicDependencyException<T>(
@@ -220,7 +228,9 @@ template <typename T>
 void
 DependencyResolver<T>::addItem(const T & value)
 {
-  _independent_items.push_back(value);
+  if (std::find(_independent_items.begin(), _independent_items.end(), value) ==
+      _independent_items.end())
+    _independent_items.push_back(value);
   if (std::find(_ordering_vector.begin(), _ordering_vector.end(), value) == _ordering_vector.end())
     _ordering_vector.push_back(value);
 }
@@ -295,7 +305,7 @@ DependencyResolver<T>::getSortedValuesSets()
   _ordered_items.clear();
 
   // Put the independent items into the first set in _ordered_items
-  std::vector<T> next_set(_independent_items);
+  std::vector<T> next_set(_independent_items.begin(), _independent_items.end());
 
   /* Topological Sort */
   while (!depends.empty())

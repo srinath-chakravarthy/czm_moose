@@ -376,6 +376,8 @@ public:
   virtual void init() override;
   virtual void solve() override;
 
+  const ConstElemRange & getEvaluableElementRange();
+
   /**
    * Set an exception.  Usually this should not be directly called - but should be called through
    * the mooseException() macro.
@@ -1496,6 +1498,11 @@ public:
    */
   bool constJacobian() const;
 
+  /**
+   * Adds an Output object.
+   */
+  void addOutput(const std::string &, const std::string &, InputParameters);
+
 protected:
   /// Create extra tagged vectors and matrices
   void createTagVectors();
@@ -1743,6 +1750,8 @@ protected:
 #endif // LIBMESH_HAVE_PETSC
 
   std::shared_ptr<LineSearch> _line_search;
+
+  std::unique_ptr<ConstElemRange> _evaluable_local_elem_range;
 
 private:
   bool _error_on_jacobian_nonzero_reallocation;

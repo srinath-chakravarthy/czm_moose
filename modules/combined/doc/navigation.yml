@@ -12,6 +12,7 @@ Getting Started:
 Documentation:
     Syntax: syntax/index.md
     Source: source/index.md
+    Examples: examples/index.md
     Application Usage: application_usage/index.md
     Application Development: application_development/index.md
     Framework Development: framework_development/index.md
@@ -20,9 +21,11 @@ Documentation:
     Software Quality: sqa/index.md
     MooseDocs: utilities/MooseDocs/index.md
     Python: utilities/python/index.md
+    C++ Fundamentals : utilities/c++/index.md
 Help:
     Frequently Asked Questions: help/faq.md
     Developer Tools: help/development/index.md
     INL HPC Connectivity: help/inlhpcconnectivity.md
     Contact Us: help/contact_us.md
+Wiki (deprecated): https://www.mooseframework.org/old/wiki
 News: newsletter/index.md

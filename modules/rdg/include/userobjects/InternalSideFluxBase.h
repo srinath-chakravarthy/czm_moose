@@ -10,9 +10,8 @@
 #ifndef INTERNALSIDEFLUXBASE_H
 #define INTERNALSIDEFLUXBASE_H
 
-#include "GeneralUserObject.h"
+#include "ThreadedGeneralUserObject.h"
 
-// Forward Declarations
 class InternalSideFluxBase;
 
 template <>
@@ -31,14 +30,15 @@ InputParameters validParams<InternalSideFluxBase>();
  *   2. Derived classes need to provide computing of the fluxes and their jacobians,
  *      i.e., they need to implement `calcFlux` and `calcJacobian`.
  */
-class InternalSideFluxBase : public GeneralUserObject
+class InternalSideFluxBase : public ThreadedGeneralUserObject
 {
 public:
   InternalSideFluxBase(const InputParameters & parameters);
 
-  virtual void execute();
-  virtual void initialize();
-  virtual void finalize();
+  virtual void execute() override;
+  virtual void initialize() override;
+  virtual void finalize() override;
+  virtual void threadJoin(const UserObject &) override;
 
   /**
    * Get the flux vector
@@ -54,8 +54,7 @@ public:
                                             dof_id_type ineig,
                                             const std::vector<Real> & uvec1,
                                             const std::vector<Real> & uvec2,
-                                            const RealVectorValue & dwave,
-                                            THREAD_ID tid) const;
+                                            const RealVectorValue & dwave) const;
 
   /**
    * Solve the Riemann problem
@@ -90,8 +89,7 @@ public:
                                                 dof_id_type ineig,
                                                 const std::vector<Real> & uvec1,
                                                 const std::vector<Real> & uvec2,
-                                                const RealVectorValue & dwave,
-                                                THREAD_ID tid) const;
+                                                const RealVectorValue & dwave) const;
 
   /**
    * Compute the Jacobian matrix
@@ -118,14 +116,11 @@ protected:
   mutable unsigned int _cached_neig_id;
 
   /// flux vector of this side
-  mutable std::vector<std::vector<Real>> _flux;
+  mutable std::vector<Real> _flux;
   /// Jacobian matrix contribution to the "left" cell
-  mutable std::vector<DenseMatrix<Real>> _jac1;
+  mutable DenseMatrix<Real> _jac1;
   /// Jacobian matrix contribution to the "right" cell
-  mutable std::vector<DenseMatrix<Real>> _jac2;
-
-private:
-  static Threads::spin_mutex _mutex;
+  mutable DenseMatrix<Real> _jac2;
 };
 
 #endif // INTERNALSIDEFLUXBASE_H

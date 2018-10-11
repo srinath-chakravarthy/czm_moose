@@ -1,19 +1,24 @@
 [Tests]
+  issues = ''
+  design = 'source/functions/MooseParsedFunction.md'
   [./steady]
     type = 'Exodiff'
     input = 'steady.i'
     exodiff = 'steady_out.e'
+    requirement = "The Function system shall support the creation of objects that execute a function defined within the input file."
   [../]
   [./transient]
     type = 'Exodiff'
     input = 'mms_transient_coupled.i'
     exodiff = 'mms_transient_coupled_out.e'
-    group = 'requirements'
+    requirement = "The ParsedFunction object shall be capable of defining function within the input file for use with the method of manufactured solutions."
+    verification = true
   [../]
   [./vector]
     type = 'Exodiff'
     input = 'vector_function.i'
     exodiff = 'vector_function_out.e'
+    requirement = "The Function system shall support the creation of objects that execute a vector function defined within the input file."
   [../]
 
   [./scalar]
@@ -21,5 +26,21 @@
     type = Exodiff
     input = scalar.i
     exodiff = 'scalar_out.e'
+    requirement = "The Function system shall support the creation of objects that execute a function defined within the input file that includes a scalar variable."
+  [../]
+
+  [./function]
+    type = Exodiff
+    input = function.i
+    exodiff = 'function_out.e'
+    requirement = "The ParsedFunction object shall support the use of other functions specified by their names in its expression."
+    issues = '#12179'
+  [../]
+
+  [./combined]
+    type = Exodiff
+    input = combined.i
+    exodiff = 'combined_out.e'
+    requirement = "The ParsedFunction object shall support the use of functions, scalar values and postprocessor values specified by their names in its expression at the same time."
   [../]
 []

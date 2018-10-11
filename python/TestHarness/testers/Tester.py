@@ -41,6 +41,8 @@ class Tester(MooseObject):
 
         params.addParam('valgrind', 'NONE', "Set to (NONE, NORMAL, HEAVY) to determine which configurations where valgrind will run.")
         params.addParam('tags',      [], "A list of strings")
+        params.addParam('max_buffer_size', None, "Bytes allowed in stdout/stderr before it is subjected to being trimmed. Set to -1 to ignore output size restrictions. "
+                                                 "If 'max_buffer_size' is not set, the default value of 'None' triggers a reasonable value (e.g. 100 kB)")
 
         # Test Filters
         params.addParam('platform',      ['ALL'], "A list of platforms for which this test will run on. ('ALL', 'DARWIN', 'LINUX', 'SL', 'LION', 'ML')")
@@ -79,13 +81,14 @@ class Tester(MooseObject):
         params.addParam('check_input',    False, "Check for correct input file syntax")
         params.addParam('display_required', False, "The test requires and active display for rendering (i.e., ImageDiff tests).")
         params.addParam('timing',         True, "If True, the test will be allowed to run with the timing flag (i.e. Manually turning on performance logging).")
-        params.addParam('boost',         ['ALL'], "A test that runs only if BOOT is detected ('ALL', 'TRUE', 'FALSE')")
+        params.addParam('boost',         ['ALL'], "A test that runs only if BOOST is detected ('ALL', 'TRUE', 'FALSE')")
 
         # SQA
         params.addParam("requirement", None, "The SQA requirement that this test satisfies (e.g., 'The Marker system shall provide means to mark elements for refinement within a box region.')")
         params.addParam("design", [], "The list of markdown files that contain the design(s) associated with this test (e.g., '/Markers/index.md /BoxMarker.md').")
         params.addParam("issues", [], "The list of github issues associated with this test (e.g., '#1234 #4321')")
-
+        params.addParam("validation", False, "Set to True to mark test as a validation problem.")
+        params.addParam("verification", False, "Set to True to mark test as a verification problem.")
         return params
 
     # This is what will be checked for when we look for valid testers
@@ -312,7 +315,7 @@ class Tester(MooseObject):
         self.errfile.flush()
 
         # store the contents of output, and close the file
-        self.joined_out = util.readOutput(self.outfile, self.errfile, options)
+        self.joined_out = util.readOutput(self.outfile, self.errfile, options, max_size=self.specs['max_buffer_size'])
         self.outfile.close()
         self.errfile.close()
 
@@ -471,8 +474,8 @@ class Tester(MooseObject):
                 tmp_reason = 'Valgrind==NONE'
             elif self.specs['valgrind'].upper() == 'HEAVY' and options.valgrind_mode.upper() == 'NORMAL':
                 tmp_reason = 'Valgrind==HEAVY'
-            elif int(self.specs['min_parallel']) > 1 or int(self.specs['min_threads']) > 1:
-                tmp_reason = 'Valgrind requires serial'
+            elif int(self.specs['min_threads']) > 1:
+                tmp_reason = 'Valgrind requires non-threaded'
             elif self.specs["check_input"]:
                 tmp_reason = 'check_input==True'
             if tmp_reason != '':

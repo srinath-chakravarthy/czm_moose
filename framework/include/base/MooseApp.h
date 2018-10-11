@@ -415,18 +415,15 @@ public:
    * attempts to load a dynamic library and register it when it is needed. Throws an error if
    * no suitable library is found that contains the app_name in question.
    */
-  void dynamicObjectRegistration(const std::string & app_name,
-                                 Factory * factory,
-                                 std::string library_path,
-                                 const std::string & library_name);
+  void dynamicAllRegistration(const std::string & app_name,
+                              Factory * factory,
+                              ActionFactory * action_factory,
+                              Syntax * syntax,
+                              std::string library_path,
+                              const std::string & library_name);
   void dynamicAppRegistration(const std::string & app_name,
                               std::string library_path,
                               const std::string & library_name);
-  void dynamicSyntaxAssociation(const std::string & app_name,
-                                Syntax * syntax,
-                                ActionFactory * action_factory,
-                                std::string library_path,
-                                const std::string & library_name);
   ///@}
 
   /**
@@ -571,9 +568,18 @@ public:
    */
   void addExecFlag(const ExecFlagType & flag);
 
+  /**
+   * Returns a Boolean indicating whether a RelationshipManater exists with the same name.
+   */
   bool hasRelationshipManager(const std::string & name) const;
 
-  void addRelationshipManager(std::shared_ptr<RelationshipManager> relationship_manager);
+  /**
+   * Transfers ownership of a RelationshipManager to the application for lifetime management.
+   * The RelationshipManager will NOT be duplicately added if an equivalent RelationshipManager
+   * is already active. In that case, it's possible that the object will be destroyed if the
+   * reference count drops to zero.
+   */
+  bool addRelationshipManager(std::shared_ptr<RelationshipManager> relationship_manager);
 
   void attachRelationshipManagers(Moose::RelationshipManagerType rm_type);
 
@@ -791,8 +797,7 @@ private:
   enum RegistrationType
   {
     APPLICATION,
-    OBJECT,
-    SYNTAX
+    REGALL
   };
 
   /// Level of multiapp, the master is level 0. This used by the Console to indent output

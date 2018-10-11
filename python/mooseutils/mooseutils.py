@@ -284,6 +284,54 @@ def text_diff(text, gold):
          .format('~'*n, '\n'.join(result).encode('utf-8'))
     return msg
 
+def unidiff(out, gold, **kwargs):
+    """
+    Perform a 'unified' style diff between the two supplied files.
+
+    Inputs:
+        out[str]: The name of the file in question.
+        gold[str]: The "gold" standard for the supplied file.
+        color[bool]: When True color is applied to the diff.
+        num_lines[int]: The number of lines to include with the diff (default: 3).
+    """
+
+    with open(out, 'r') as fid:
+        out_content = fid.read()
+    with open(gold, 'r') as fid:
+        gold_content = fid.read()
+
+    return text_unidiff(out_content, gold_content, out_fname=out, gold_fname=gold, **kwargs)
+
+def text_unidiff(out_content, gold_content, out_fname=None, gold_fname=None, color=True, num_lines=3):
+    """
+    Perform a 'unified' style diff between the two supplied files.
+
+    Inputs:
+        out_content[str]: The content in question.
+        gold_content[str]: The "gold" standard for the supplied content.
+        color[bool]: When True color is applied to the diff.
+        num_lines[int]: The number of lines to include with the diff (default: 3).
+
+    """
+    diff = []
+    for line in difflib.unified_diff(out_content.splitlines(True),
+                                     gold_content.splitlines(True),
+                                     fromfile=out_fname,
+                                     tofile=gold_fname, n=num_lines):
+
+        if color:
+            if line.startswith('-'):
+                line = colorText(line, 'RED')
+            elif line.startswith('+'):
+                line = colorText(line, 'GREEN')
+            elif line.startswith('@'):
+                line = colorText(line, 'CYAN')
+
+
+        diff.append(line)
+    return ''.join(diff)
+
+
 def git_ls_files(working_dir=os.getcwd()):
     """
     Return a list of files via 'git ls-files'.

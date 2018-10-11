@@ -2,6 +2,7 @@
 import os
 import collections
 import logging
+import re
 
 import anytree
 
@@ -93,7 +94,14 @@ class AppSyntaxExtension(command.CommandExtension):
                                                   hide=self['hide'],
                                                   allow_test_objects=self['allow-test-objects'])
 
-                    self._app_type = mooseutils.runExe(exe, ['--type']).strip(' \n')
+                    out = mooseutils.runExe(exe, ['--type'])
+                    match = re.search(r'^MooseApp Type:\s+(?P<type>.*?)$', out, flags=re.MULTILINE)
+                    if match:
+                        self._app_type = match.group("type")
+                    else:
+                        msg = "Failed to determine application type by running the following:\n"
+                        msg += "    {} --type".format(exe)
+                        LOG.error(msg)
 
                 except Exception as e: #pylint: disable=broad-except
                     msg = "Failed to load application executable from '%s', " \
@@ -396,12 +404,12 @@ class RenderSyntaxToken(components.RenderComponent):
         errors = []
 
         groups = list(token.syntax.groups)
-        if 'MOOSE' in groups:
-            groups.remove('MOOSE')
-            groups.insert(0, 'MOOSE')
+        if 'MooseApp' in groups:
+            groups.remove('MooseApp')
+            groups.insert(0, 'MooseApp')
 
         collection = html.Tag(None, 'ul', class_='collection with-header')
-        n_groups = len(active_groups)
+        n_groups = len(groups)
         for group in groups:
 
             if active_groups and group.lower() not in active_groups:
@@ -605,8 +613,12 @@ def _insert_parameter(parent, name, param):
     html.Tag(p, 'span', string=u'C++ Type:')
     html.String(p, content=cpp_type)
 
-    p = html.Tag(body, 'p', class_='moose-parameter-description')
+    if 'options' in param:
+        p = html.Tag(body, 'p', class_='moose-parameter-description-options')
+        html.Tag(p, 'span', string=u'Options:')
+        html.String(p, content=param['options'])
 
+    p = html.Tag(body, 'p', class_='moose-parameter-description')
     desc = param['description']
     if desc:
         html.Tag(header, 'span', class_='moose-parameter-header-description', string=unicode(desc))

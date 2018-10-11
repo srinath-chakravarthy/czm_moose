@@ -9,7 +9,7 @@
 #* https://www.gnu.org/licenses/lgpl-2.1.html
 import collections
 import logging
-
+import json
 import mooseutils
 
 from MooseDocs import common
@@ -42,12 +42,43 @@ class Token(NodeBase):
         node = self
         #pylint: disable=protected-access
         while node._info is None: # use _info to prevent infinite loop
+            if node.parent is None:
+                break
             node = node.parent
         return node._info
 
     @info.setter
     def info(self, value):
         self._info = value
+
+    def write(self, _raw=False): #pylint: disable=arguments-differ
+        """
+        Return a dict() appropriate for JSON output.
+
+        Inputs:
+            _raw[bool]: An internal flag for skipping json conversion while building containers
+        """
+        item = collections.OrderedDict()
+        item['type'] = self.__class__.__name__
+        item['name'] = self.name
+        item['children'] = list()
+
+        properties = dict()
+        for key, value in self._NodeBase__properties.iteritems():
+            properties[key] = value
+        item['properties'] = properties
+
+        attributes = dict()
+        for key, value in self._NodeBase__attributes.iteritems():
+            attributes[key] = value
+        item['attributes'] = attributes
+
+        for child in self.children:
+            item['children'].append(child.write(_raw=True))
+
+        if _raw:
+            return item
+        return json.dumps(item, indent=2, sort_keys=True)
 
 class CountToken(Token):
     """

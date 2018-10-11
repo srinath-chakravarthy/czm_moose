@@ -26,6 +26,7 @@
 #include <fstream>
 #include <istream>
 #include <iterator>
+#include <ctime>
 
 // System includes
 #include <sys/stat.h>
@@ -694,6 +695,14 @@ toUpper(const std::string & name)
   return upper;
 }
 
+std::string
+toLower(const std::string & name)
+{
+  std::string lower(name);
+  std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+  return lower;
+}
+
 ExecFlagEnum
 getDefaultExecFlagEnum()
 {
@@ -725,7 +734,7 @@ getLatestCheckpointFileHelper(const std::list<std::string> & checkpoint_files,
   // Create storage for newest restart files
   // Note that these might have the same modification time if the simulation was fast.
   // In that case we're going to save all of the "newest" files and sort it out momentarily
-  time_t newest_time = 0;
+  std::time_t newest_time = 0;
   std::list<std::string> newest_restart_files;
 
   // Loop through all possible files and store the newest
@@ -738,7 +747,7 @@ getLatestCheckpointFileHelper(const std::list<std::string> & checkpoint_files,
       struct stat stats;
       stat(cp_file.c_str(), &stats);
 
-      time_t mod_time = stats.st_mtime;
+      std::time_t mod_time = stats.st_mtime;
       if (mod_time > newest_time)
       {
         newest_restart_files.clear(); // If the modification time is greater, clear the list

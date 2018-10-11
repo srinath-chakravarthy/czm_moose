@@ -9,9 +9,6 @@
 
 #include "RDGFluxBase.h"
 
-// Static mutex definition
-Threads::spin_mutex RDGFluxBase::_mutex;
-
 template <>
 InputParameters
 validParams<RDGFluxBase>()
@@ -22,11 +19,8 @@ validParams<RDGFluxBase>()
   return params;
 }
 
-RDGFluxBase::RDGFluxBase(const InputParameters & parameters) : GeneralUserObject(parameters)
+RDGFluxBase::RDGFluxBase(const InputParameters & parameters) : ThreadedGeneralUserObject(parameters)
 {
-  _flux.resize(libMesh::n_threads());
-  _jac1.resize(libMesh::n_threads());
-  _jac2.resize(libMesh::n_threads());
 }
 
 void
@@ -46,23 +40,26 @@ RDGFluxBase::finalize()
 {
 }
 
+void
+RDGFluxBase::threadJoin(const UserObject &)
+{
+}
+
 const std::vector<Real> &
 RDGFluxBase::getFlux(const unsigned int iside,
                      const dof_id_type ielem,
                      const std::vector<Real> & uvec1,
                      const std::vector<Real> & uvec2,
-                     const RealVectorValue & normal,
-                     THREAD_ID tid) const
+                     const RealVectorValue & normal) const
 {
-  Threads::spin_mutex::scoped_lock lock(_mutex);
   if (_cached_elem_id != ielem || _cached_side_id != iside)
   {
     _cached_elem_id = ielem;
     _cached_side_id = iside;
 
-    calcFlux(uvec1, uvec2, normal, _flux[tid]);
+    calcFlux(uvec1, uvec2, normal, _flux);
   }
-  return _flux[tid];
+  return _flux;
 }
 
 const DenseMatrix<Real> &
@@ -71,20 +68,18 @@ RDGFluxBase::getJacobian(const bool get_first_jacobian,
                          const dof_id_type ielem,
                          const std::vector<Real> & uvec1,
                          const std::vector<Real> & uvec2,
-                         const RealVectorValue & normal,
-                         THREAD_ID tid) const
+                         const RealVectorValue & normal) const
 {
-  Threads::spin_mutex::scoped_lock lock(_mutex);
   if (_cached_elem_id != ielem || _cached_side_id != iside)
   {
     _cached_elem_id = ielem;
     _cached_side_id = iside;
 
-    calcJacobian(uvec1, uvec2, normal, _jac1[tid], _jac2[tid]);
+    calcJacobian(uvec1, uvec2, normal, _jac1, _jac2);
   }
 
   if (get_first_jacobian)
-    return _jac1[tid];
+    return _jac1;
   else
-    return _jac2[tid];
+    return _jac2;
 }

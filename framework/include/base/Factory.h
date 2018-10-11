@@ -12,7 +12,7 @@
 
 #include <set>
 #include <vector>
-#include <time.h>
+#include <ctime>
 
 // MOOSE includes
 #include "MooseObject.h"
@@ -164,10 +164,11 @@ public:
   template <typename T>
   void reg(const std::string & obj_name, const std::string & file = "", int line = -1)
   {
-    reg(obj_name, &buildObject<T>, &validParams<T>, "", "", file, line);
+    reg("", obj_name, &buildObject<T>, &validParams<T>, "", "", file, line);
   }
 
-  void reg(const std::string & obj_name,
+  void reg(const std::string & label,
+           const std::string & obj_name,
            const buildPtr & build_ptr,
            const paramsPtr & params_ptr,
            const std::string & deprecated_time = "",
@@ -210,7 +211,7 @@ public:
                      const std::string & file,
                      int line)
   {
-    reg(obj_name, &buildObject<T>, &validParams<T>, t_str, "", file, line);
+    reg("", obj_name, &buildObject<T>, &validParams<T>, t_str, "", file, line);
   }
 
   /**
@@ -229,7 +230,7 @@ public:
                    const std::string & file,
                    int line)
   {
-    reg(dep_obj, &buildObject<T>, &validParams<T>, time_str, replacement_name, file, line);
+    reg("", dep_obj, &buildObject<T>, &validParams<T>, time_str, replacement_name, file, line);
   }
 
   /**
@@ -312,6 +313,14 @@ public:
   }
 
   /**
+   * Releases any shared resources created as a side effect of creating an object through
+   * the Factory::create method(s). Currently, this object just moves the InputParameters object
+   * from the InputParameterWarehouse. Normally this method does not need to be explicitly called
+   * during a normal simulation.
+   */
+  void releaseSharedObjects(const MooseObject & moose_object, THREAD_ID tid = 0);
+
+  /**
    * Calling this object with a non-empty vector will cause this factory to ignore registrations
    * from any object
    * not contained within the list.
@@ -348,7 +357,7 @@ protected:
    * @param t_str String with the object expiration date, this must be in the form mm/dd/yyyy HH:MM
    * @return A time_t object with the expiration date
    */
-  time_t parseTime(std::string);
+  std::time_t parseTime(std::string);
 
   /**
    * Show the appropriate message for deprecated objects
@@ -376,7 +385,7 @@ protected:
   std::map<std::string, std::string> _name_to_class;
 
   /// Storage for deprecated object experiation dates
-  std::map<std::string, time_t> _deprecated_time;
+  std::map<std::string, std::time_t> _deprecated_time;
 
   /// Storage for the deprecated objects that have replacements
   std::map<std::string, std::string> _deprecated_name;
@@ -389,6 +398,11 @@ protected:
 
   /// Constructed Moose Object types
   std::set<std::string> _constructed_types;
+
+  /// set<label/appname, objectname> used to track if an object previously added is being added
+  /// again - which is okay/allowed, while still allowing us to detect/reject cases of duplicate
+  /// object name registration where the label/appname is not identical.
+  std::set<std::pair<std::string, std::string>> _objects_by_label;
 };
 
 #endif /* FACTORY_H */

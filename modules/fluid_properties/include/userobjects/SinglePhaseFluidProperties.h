@@ -56,7 +56,7 @@ public:
    *
    * @param[in] v   specific volume
    * @param[in] e   specific internal energy
-   * @returns sound speed
+   * @return sound speed
    */
   virtual Real T_from_v_e(Real v, Real e) const;
 
@@ -149,6 +149,7 @@ public:
    * @param[in] T   temperature
    */
   virtual Real s_from_p_T(Real p, Real T) const;
+  virtual Real s(Real pressure, Real temperature) const;
 
   /**
    * Specific entropy and its derivatives from pressure and temperature
@@ -279,42 +280,56 @@ public:
   virtual void e_from_p_rho(Real p, Real rho, Real & e, Real & de_dp, Real & de_drho) const;
 
   /**
+   * Pressure from temperature and specific volume
+   *
+   * @param[in] T     temperature
+   * @param[in] v     specific volume
+   */
+  virtual Real p_from_T_v(Real T, Real v) const;
+
+  /**
    * Specific enthalpy from pressure and temperature
    *
-   * @param[in] p   pressure
-   * @param[in] T   temperature
+   * @param[in] p   pressure (Pa)
+   * @param[in] T   temperature (K)
+   * @return h (J/kg)
    */
   virtual Real h_from_p_T(Real p, Real T) const;
+  virtual Real h(Real p, Real T) const;
 
   /**
    * Specific enthalpy and its derivatives from pressure and temperature
    *
-   * @param[in] p        pressure
-   * @param[in] T        temperature
-   * @param[out] h       specific enthalpy
+   * @param[in] p        pressure (Pa)
+   * @param[in] T        temperature (K)
+   * @param[out] h       specific enthalpy (J/kg)
    * @param[out] dh_dp   derivative of specific enthalpy w.r.t. pressure
    * @param[out] dh_dT   derivative of specific enthalpy w.r.t. temperature
    */
   virtual void h_from_p_T(Real p, Real T, Real & h, Real & dh_dp, Real & dh_dT) const;
+  virtual void h_dpT(Real pressure, Real temperature, Real & h, Real & dh_dp, Real & dh_dT) const;
 
   /**
    * Internal energy from pressure and temperature
    *
-   * @param[in] p   pressure
-   * @param[in] T   temperature
+   * @param[in] p   pressure (Pa)
+   * @param[in] T   temperature (K)
+   * @return internal energy (J/kg)
    */
   virtual Real e_from_p_T(Real p, Real T) const;
+  virtual Real e(Real pressure, Real temperature) const;
 
   /**
    * Internal energy and its derivatives from pressure and temperature
    *
-   * @param[in] p        pressure
-   * @param[in] T        temperature
-   * @param[out] e       internal energy
+   * @param[in] p        pressure (Pa)
+   * @param[in] T        temperature (K)
+   * @param[out] e       internal energy (J/kg)
    * @param[out] de_dp   derivative of internal energy w.r.t. pressure
    * @param[out] de_dT   derivative of internal energy w.r.t. temperature
    */
   virtual void e_from_p_T(Real p, Real T, Real & e, Real & de_dp, Real & de_dT) const;
+  virtual void e_dpT(Real pressure, Real temperature, Real & e, Real & de_dp, Real & de_dT) const;
 
   /**
    * Pressure from specific enthalpy and specific entropy
@@ -343,10 +358,21 @@ public:
   /**
    * Thermal expansion coefficient from pressure and temperature
    *
-   * @param[in] p   pressure
-   * @param[in] T   temperature
+   * @param[in] p   pressure (Pa)
+   * @param[in] T   temperature (K)
+   * @return beta (1/K)
    */
   virtual Real beta_from_p_T(Real p, Real T) const;
+  virtual Real beta(Real pressure, Real temperature) const;
+
+  /**
+   * Temperature from pressure and specific enthalpy
+   *
+   * @param[in] pressure   pressure (Pa)
+   * @param[in] enthalpy   enthalpy (J/kg)
+   * @return Temperature (K)
+   */
+  virtual Real T_from_p_h(Real pressure, Real enthalpy) const;
 
   /**
    * Molar mass [kg/mol]
@@ -386,24 +412,6 @@ public:
   virtual Real triplePointTemperature() const;
 
   /**
-   * Internal energy
-   * @param pressure fluid pressure (Pa)
-   * @param temperature fluid temperature (K)
-   * @return internal energy (J/kg)
-   */
-  virtual Real e(Real pressure, Real temperature) const;
-
-  /**
-   * Internal energy and its derivatives wrt pressure and temperature
-   * @param pressure fluid pressure (Pa)
-   * @param temperature fluid temperature (K)
-   * @param[out] e internal energy (J/kg)
-   * @param[out] de_dp derivative of internal energy wrt pressure
-   * @param[out] de_dT derivative of internal energy wrt temperature
-   */
-  virtual void e_dpT(Real pressure, Real temperature, Real & e, Real & de_dp, Real & de_dT) const;
-
-  /**
    * Density and internal energy and their derivatives wrt pressure and temperature
    * @param pressure fluid pressure (Pa)
    * @param temperature fluid temperature (K)
@@ -429,6 +437,7 @@ public:
    * @param temperature fluid temperature (K)
    * @return speed of sound (m/s)
    */
+  virtual Real c_from_p_T(Real pressure, Real temperature) const;
   virtual Real c(Real pressure, Real temperature) const;
 
   /**
@@ -462,6 +471,7 @@ public:
    * @return viscosity (Pa.s)
    */
   virtual Real mu(Real pressure, Real temperature) const;
+  virtual Real mu_from_p_T(Real pressure, Real temperature) const;
 
   /**
    * Dynamic viscosity and its derivatives wrt pressure and temperature
@@ -473,6 +483,8 @@ public:
    */
   virtual void
   mu_dpT(Real pressure, Real temperature, Real & mu, Real & dmu_dp, Real & dmu_dT) const;
+  virtual void
+  mu_from_p_T(Real pressure, Real temperature, Real & mu, Real & dmu_dp, Real & dmu_dT) const;
 
   /**
    * Dynamic viscosity as a function of density and temperature
@@ -532,6 +544,7 @@ public:
    * @param temperature fluid temperature (K)
    * @return thermal conductivity  (W/m/K)
    */
+  virtual Real k_from_p_T(Real pressure, Real temperature) const;
   virtual Real k(Real pressure, Real temperature) const;
 
   /**
@@ -542,6 +555,8 @@ public:
    * @param[out] derivative of thermal conductivity wrt pressure
    * @param[out] derivative of thermal conductivity wrt temperature
    */
+  virtual void
+  k_from_p_T(Real pressure, Real temperature, Real & k, Real & dk_dp, Real & dk_dT) const;
   virtual void k_dpT(Real pressure, Real temperature, Real & k, Real & dk_dp, Real & dk_dT) const;
 
   /**
@@ -551,43 +566,6 @@ public:
    * @return thermal conductivity  (W/m/K)
    */
   virtual Real k_from_rho_T(Real density, Real temperature) const;
-
-  /**
-   * Specific entropy
-   * @param pressure fluid pressure (Pa)
-   * @param temperature fluid temperature (K)
-   * @return s (J/kg/K)
-   */
-  virtual Real s(Real pressure, Real temperature) const;
-
-  /**
-   * Specific enthalpy
-   * @param pressure fluid pressure (Pa)
-   * @param temperature fluid temperature (K)
-   * @return h (J/kg)
-   */
-  virtual Real h(Real p, Real T) const;
-
-  /**
-   * Enthalpy and its derivatives wrt pressure and temperature
-   * @param pressure fluid pressure (Pa)
-   * @param temperature fluid temperature (K)
-   * @param[out] h (J/kg)
-   * @param[out] dh_dp derivative of enthalpy wrt pressure
-   * @param[out] dh_dT derivative of enthalpy wrt temperature
-   */
-  virtual void h_dpT(Real pressure, Real temperature, Real & h, Real & dh_dp, Real & dh_dT) const;
-
-  /**
-   * Isobaric thermal expansion coefficient, defined as
-   * 1/v (dv/dT)_p, where v is the volume, and the derivative wrt temperature is
-   * taken at constant pressure.
-   * Note: this is equivalent to -1/rho (drho/dT)_p, which is used in the calculation
-   * @param pressure fluid pressure (Pa)
-   * @param temperature fluid temperature (K)
-   * @return beta (1/K)
-   */
-  virtual Real beta(Real pressure, Real temperature) const;
 
   /**
    * Henry's law constant for dissolution in water
