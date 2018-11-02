@@ -96,6 +96,7 @@ FiniteStrainHyperElasticViscoPlastic::initUOVariables()
   initProp(_int_var_rate_uo_names, _num_int_var_rate_uos, _int_var_rate_prop);
 
   initPropOld(_int_var_uo_names, _num_int_var_uos, _int_var_stateful_prop_old);
+  initPropOld(_strength_uo_names, _num_strength_uos, _strength_prop_old);
 
   initUserObjects(_flow_rate_uo_names, _num_flow_rate_uos, _flow_rate_uo);
   initUserObjects(_strength_uo_names, _num_strength_uos, _strength_uo);
@@ -103,6 +104,7 @@ FiniteStrainHyperElasticViscoPlastic::initUOVariables()
   initUserObjects(_int_var_rate_uo_names, _num_int_var_rate_uos, _int_var_rate_uo);
 
   _int_var_old.resize(_num_int_var_uos, 0.0);
+  _strength_var_old.resize(_num_strength_uos, 0.0);
 }
 
 void
@@ -188,6 +190,7 @@ FiniteStrainHyperElasticViscoPlastic::initQpStatefulProperties()
   _ce[_qp].zero();
 
   _pk2[_qp].zero();
+  
 
   for (unsigned int i = 0; i < _num_flow_rate_uos; ++i)
     (*_flow_rate_prop[i])[_qp] = 0.0;
@@ -201,6 +204,13 @@ FiniteStrainHyperElasticViscoPlastic::initQpStatefulProperties()
     // TODO: remove this nasty const_cast if you can figure out how
     const_cast<MaterialProperty<Real> &>(*_int_var_stateful_prop_old[i])[_qp] = 0.0;
   }
+    
+  for (unsigned int i = 0; i < _num_strength_uos; ++i)
+  {
+    (*_strength_prop[i])[_qp] = 0.0;
+    // TODO: remove this nasty const_cast if you can figure out how
+    const_cast<MaterialProperty<Real> &>(*_strength_prop_old[i])[_qp] = 0.0;
+  }    
 
   for (unsigned int i = 0; i < _num_int_var_rate_uos; ++i)
     (*_int_var_rate_prop[i])[_qp] = 0.0;
@@ -236,7 +246,7 @@ FiniteStrainHyperElasticViscoPlastic::computeQpStress()
     }
 
     if (substep_iter > _max_substep_iter)
-      mooseError("Constitutive failure with substepping at quadrature point ",
+      mooseError("Constitutive failure with substepping at quadrature point ", _dt_substep,
                  _q_point[_qp](0),
                  " ",
                  _q_point[_qp](1),
@@ -252,6 +262,9 @@ FiniteStrainHyperElasticViscoPlastic::saveOldState()
 {
   for (unsigned int i = 0; i < _num_int_var_uos; ++i)
     _int_var_old[i] = (*_int_var_stateful_prop_old[i])[_qp];
+    
+  for (unsigned int i = 0; i < _num_strength_uos; ++i)
+    _strength_var_old[i] = (*_strength_prop_old[i])[_qp];    
 }
 
 void
@@ -264,6 +277,11 @@ FiniteStrainHyperElasticViscoPlastic::preSolveQp()
     (*_int_var_stateful_prop[i])[_qp] =
         const_cast<MaterialProperty<Real> &>(*_int_var_stateful_prop_old[i])[_qp] = _int_var_old[i];
 
+  for (unsigned int i = 0; i < _num_int_var_uos; ++i)
+    (*_strength_prop[i])[_qp] =
+        const_cast<MaterialProperty<Real> &>(*_strength_prop_old[i])[_qp] = _strength_var_old[i];
+        
+        
   _dpk2_dce = _elasticity_tensor[_qp] * _dee_dce;
 }
 
@@ -295,6 +313,9 @@ FiniteStrainHyperElasticViscoPlastic::recoverOldState()
   // TODO: remove this nasty const_cast if you can figure out how
   for (unsigned int i = 0; i < _num_int_var_uos; ++i)
     const_cast<MaterialProperty<Real> &>(*_int_var_stateful_prop_old[i])[_qp] = _int_var_old[i];
+    
+  for (unsigned int i = 0; i < _num_int_var_uos; ++i)
+    const_cast<MaterialProperty<Real> &>(*_strength_prop_old[i])[_qp] = _strength_var_old[i];    
 }
 
 void
@@ -308,6 +329,9 @@ FiniteStrainHyperElasticViscoPlastic::preSolveFlowrate()
 
   for (unsigned int i = 0; i < _num_int_var_uos; ++i)
     (*_int_var_stateful_prop[i])[_qp] = (*_int_var_stateful_prop_old[i])[_qp];
+    
+  for (unsigned int i = 0; i < _num_strength_uos; ++i)
+    (*_strength_prop[i])[_qp] = (*_strength_prop_old[i])[_qp];    
 
   _fp_tmp_inv = _fp_tmp_old_inv;
   _fe = _dfgrd_tmp * _fp_tmp_inv;
@@ -369,6 +393,11 @@ FiniteStrainHyperElasticViscoPlastic::postSolveFlowrate()
   for (unsigned int i = 0; i < _num_int_var_uos; ++i)
     const_cast<MaterialProperty<Real> &>(*_int_var_stateful_prop_old[i])[_qp] =
         (*_int_var_stateful_prop[i])[_qp];
+
+  for (unsigned int i = 0; i < _num_strength_uos; ++i)
+    const_cast<MaterialProperty<Real> &>(*_strength_prop_old[i])[_qp] =
+        (*_strength_prop[i])[_qp];
+
 }
 
 bool
@@ -613,7 +642,7 @@ FiniteStrainHyperElasticViscoPlastic::computeStrength()
   Real val = 0;
   for (unsigned int i = 0; i < _num_strength_uos; ++i)
   {
-    if (_strength_uo[i]->computeValue(_qp, val))
+    if (_strength_uo[i]->computeValue(_qp, _dt_substep, val))
       (*_strength_prop[i])[_qp] = val;
     else
       return false;

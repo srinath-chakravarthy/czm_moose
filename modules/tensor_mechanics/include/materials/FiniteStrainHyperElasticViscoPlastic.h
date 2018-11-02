@@ -206,7 +206,10 @@ protected:
   std::vector<MaterialProperty<Real> *> _int_var_stateful_prop;
   std::vector<const MaterialProperty<Real> *> _int_var_stateful_prop_old;
   std::vector<MaterialProperty<Real> *> _int_var_rate_prop;
+  std::vector<const MaterialProperty<Real> *> _strength_prop_old;
+  
   std::vector<Real> _int_var_old;
+  std::vector<Real> _strength_var_old;
 
   RankTwoTensor _dfgrd_tmp;
   RankTwoTensor _fp_tmp_inv, _fp_tmp_old_inv;

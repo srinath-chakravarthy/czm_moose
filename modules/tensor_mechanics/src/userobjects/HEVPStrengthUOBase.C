@@ -25,6 +25,7 @@ validParams<HEVPStrengthUOBase>()
 HEVPStrengthUOBase::HEVPStrengthUOBase(const InputParameters & parameters)
   : DiscreteElementUserObject(parameters),
     _intvar_prop_name(getParam<std::string>("intvar_prop_name")),
-    _intvar(getMaterialPropertyByName<Real>(_intvar_prop_name))
+    _intvar(getMaterialPropertyByName<Real>(_intvar_prop_name)),
+    _this_old(getMaterialPropertyOldByName<Real>(_name))
 {
 }

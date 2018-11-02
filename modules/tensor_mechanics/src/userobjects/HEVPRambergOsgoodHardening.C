@@ -33,8 +33,9 @@ HEVPRambergOsgoodHardening::HEVPRambergOsgoodHardening(const InputParameters & p
 }
 
 bool
-HEVPRambergOsgoodHardening::computeValue(unsigned int qp, Real & val) const
+HEVPRambergOsgoodHardening::computeValue(unsigned int qp, Real dt, Real & val) const
 {
+    if (_t == 0) val = 0;
   val = _sig0 * std::pow(_intvar[qp] / _peeq0 + 1.0, _exponent);
   return true;
 }

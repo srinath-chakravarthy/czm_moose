@@ -30,7 +30,7 @@ HEVPLinearHardening::HEVPLinearHardening(const InputParameters & parameters)
 }
 
 bool
-HEVPLinearHardening::computeValue(unsigned int qp, Real & val) const
+HEVPLinearHardening::computeValue(unsigned int qp, Real dt, Real & val) const
 {
   val = _sig0 + _slope * _intvar[qp];
   return true;
