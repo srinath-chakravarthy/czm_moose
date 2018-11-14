@@ -42,6 +42,7 @@ HEVPRambergOsgoodHardening::computeValue(unsigned int qp, Real dt, Real & val) c
 
 bool
 HEVPRambergOsgoodHardening::computeDerivative(unsigned int qp,
+                                              Real dt,
                                               const std::string & coupled_var_name,
                                               Real & val) const
 {

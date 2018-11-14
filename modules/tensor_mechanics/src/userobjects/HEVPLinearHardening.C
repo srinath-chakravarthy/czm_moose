@@ -38,6 +38,7 @@ HEVPLinearHardening::computeValue(unsigned int qp, Real dt, Real & val) const
 
 bool
 HEVPLinearHardening::computeDerivative(unsigned int /*qp*/,
+                                       Real dt,
                                        const std::string & coupled_var_name,
                                        Real & val) const
 {

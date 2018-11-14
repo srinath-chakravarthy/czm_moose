@@ -246,7 +246,7 @@ FiniteStrainHyperElasticViscoPlastic::computeQpStress()
     }
 
     if (substep_iter > _max_substep_iter)
-      mooseError("Constitutive failure with substepping at quadrature point ", _dt_substep,
+      mooseError("Constitutive failure with substepping at quadrature point ",
                  _q_point[_qp](0),
                  " ",
                  _q_point[_qp](1),
@@ -706,7 +706,7 @@ FiniteStrainHyperElasticViscoPlastic::computeStrengthDerivatives()
   for (unsigned int i = 0; i < _num_strength_uos; ++i)
     for (unsigned int j = 0; j < _num_int_var_uos; ++j)
     {
-      _strength_uo[i]->computeDerivative(_qp, _int_var_uo_names[j], val);
+      _strength_uo[i]->computeDerivative(_qp, _dt_substep,_int_var_uo_names[j], val);
       _dstrength_dintvar(i, j) = val;
     }
 }
