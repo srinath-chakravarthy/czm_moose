@@ -277,7 +277,7 @@ FiniteStrainHyperElasticViscoPlastic::preSolveQp()
     (*_int_var_stateful_prop[i])[_qp] =
         const_cast<MaterialProperty<Real> &>(*_int_var_stateful_prop_old[i])[_qp] = _int_var_old[i];
 
-  for (unsigned int i = 0; i < _num_int_var_uos; ++i)
+  for (unsigned int i = 0; i < _num_strength_uos; ++i)
     (*_strength_prop[i])[_qp] =
         const_cast<MaterialProperty<Real> &>(*_strength_prop_old[i])[_qp] = _strength_var_old[i];
         
@@ -314,7 +314,7 @@ FiniteStrainHyperElasticViscoPlastic::recoverOldState()
   for (unsigned int i = 0; i < _num_int_var_uos; ++i)
     const_cast<MaterialProperty<Real> &>(*_int_var_stateful_prop_old[i])[_qp] = _int_var_old[i];
     
-  for (unsigned int i = 0; i < _num_int_var_uos; ++i)
+  for (unsigned int i = 0; i < _num_strength_uos; ++i)
     const_cast<MaterialProperty<Real> &>(*_strength_prop_old[i])[_qp] = _strength_var_old[i];    
 }
 
